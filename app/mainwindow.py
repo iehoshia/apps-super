@@ -259,7 +259,6 @@ class MainWindow(FrontWindow):
             self.set_state('cancel')
             self._model_payment_lines.setDomain([('statement.state','=','draft')], \
                 order=[('id','DESC')])
-
         return
 
     def close(self, from_close=False):
