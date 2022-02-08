@@ -88,7 +88,7 @@ class Login(QDialog):
         ])
         formLayout = GridForm(self, values=values, col=1)
         self.field_password.setEchoMode(QLineEdit.Password)
-        #self.field_password.setText("ADMIN123")
+        self.field_password.setText("ADMIN123")
         self.field_password.textChanged.connect(self.clear_message)
 
         box_buttons = QDialogButtonBox()
