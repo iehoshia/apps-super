@@ -1,0 +1,107 @@
+
+#WinMain {
+    width : 100%;
+    background-color: white;
+}
+
+QAbstractButton {
+    font-family: "DejaVu Sans";
+}
+
+QAbstractButton::pressed {
+    background-color: rgb(190, 214, 224);
+}
+
+QLabel {
+    font : 12pt;
+    color : rgb(102, 102, 102);
+    min-height : 10px;
+    min-width : 10px;
+}
+
+TLabel {
+    font : 25px;
+    color : rgb(25, 60, 90);
+    max-height : 40px;
+    background-color: rgb(255, 255, 255);
+    max-height : 70px;
+    min-height : 70px;
+}
+
+RLabel {
+    font : 22px;
+    color : rgb(95, 110, 120);
+    max-height : 70px;
+    min-height : 70px;
+}
+
+RLabel:hover {
+    background-color: rgb(196, 227, 245);
+}
+
+Separator {
+    background-color : rgb(255, 255, 255);
+    color : rgb(198, 210, 220);
+    max-height : 2px;
+}
+
+List {
+    background-color : rgb(255, 255, 255);
+}
+
+#label_count {
+    font : 12pt;
+    color : rgb(140, 140, 140);
+    background-color: rgb(240, 240, 240);
+    min-height : 10px;
+    min-width : 40px;
+}
+
+QListView {
+    font: bold 26px;
+    color: #08090a;
+}
+
+QScrollArea {
+  background-color: rgb(255, 255, 255);
+}
+
+#label_message {
+    font : 9pt;
+    min-height : 150px;
+    min-width : 10px;
+}
+
+#login_msg_error {
+    font : 18pt;
+    color : rgb(191, 43, 28);
+    max-height : 50px;
+}
+
+QDialog {
+  max-height : 150px;
+  max-width : 270px;
+  background-color: rgb(255, 255, 255);
+}
+
+
+#dialog_login {
+  background-color: rgb(255, 255, 255);
+  min-height : 480px;
+  max-height : 770px;
+  max-width : 500px;
+}
+
+#button_cancel, #button_ok {
+  font : 16pt;
+  min-height : 50px;
+  min-width : 120px;
+}
+
+#label_host, #label_database, #label_device_id, #label_user,
+  #label_password, #label_mode, #field_host, #field_database,
+  #field_device_id, #field_user, #field_password, #field_mode  {
+    font : 18pt;
+    min-height : 40px;
+    min-width : 10px;
+}

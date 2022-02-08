@@ -1,0 +1,56 @@
+Installing Tryton POS Client
+============================
+
+Prerequisites Client
+--------------------
+
+ * Python 3.5 or later (http://www.python.org/)
+ * python-setuptools
+ * python3-pyqt5
+ * python3-pyqt5.qtsvg
+ * python3-dateutil
+ * python-pip
+ * libusb-1.0-0
+ * libusb-1.0-0-dev
+ * python3-dev
+ * python3-pil
+
+ * neo (https://bitbucket.org/presik/neo)
+
+ * Optional, Pip packages:
+	pip3 install pyusb
+	pip3 install pillow
+	pip3 install qrcode
+	pip3 install paramiko
+	pip3 install pycups
+
+Prerequisites Server Modules
+----------------------------
+
+ * trytond_account_invoice (http://www.tryton.org/)
+ * trytond_sale (http://www.tryton.org/)
+ * trytond_sale_invoice_grouping (http://www.tryton.org/)
+ * trytond_sale_payment (http://www.bitbucket.org/)
+ * trytond_sale_shop (http://www.bitbucket.org/)
+ * trytond_sale_pos (http://www.bitbucket.org/)
+ * trytonpsk_sale_salesman (http://www.bitbucket.org/)
+ * trytonpsk_sale_w_tax (http://www.bitbucket.org/)
+ * trytonpsk_sale_pos_frontend (https://bitbucket.org/presik/trytonpsk_sale_pos_frontend)
+ * trytonpsk_product_onebarcode (http://www.bitbucket.org/)
+
+
+pip3 install pyserial
+sudo adduser myuser dialout
+
+
+Installation
+------------
+
+Once you've downloaded and unpacked the pos_client_qt5 source release, enter the
+directory where the archive was unpacked, and run:
+
+    python setup.py install
+
+Note that you may need administrator/root privileges for this step, as
+this command will by default attempt to install module to the Python
+site-packages directory on your system.

@@ -1,0 +1,46 @@
+Presik POS Client for Tryton
+=========================================
+
+The Point of Sale Client for Tryton application platform development
+in Qt5 and Python3.
+
+Installing
+----------
+
+See INSTALL
+
+Support
+-------
+
+If you encounter any problems with Tryton, please don't hesitate to ask
+questions on the Tryton bug tracker, mailing list, wiki or IRC channel:
+
+  https://bitbucket.org/presik/presik_pos
+  https://www.presik.com
+  http://bugs.tryton.org/
+  http://groups.tryton.org/
+  http://wiki.tryton.org/
+  irc://irc.freenode.net/tryton
+
+License
+-------
+
+See LICENSE
+
+
+Update Translation
+------------------
+Modify your i18 file and execute in terminal:
+
+$lrelease i18n_es.ts
+
+
+Copyright
+---------
+
+See COPYRIGHT
+
+
+For more information please visit the Tryton web site:
+
+  http://www.bitbucket.org/

@@ -1,0 +1,108 @@
+#WinMain {
+    width : 100%;
+    background-color: #e7e8e9;
+}
+
+QListView {
+    font: bold 46px;
+    color: #383838;
+    alignment : center;
+}
+
+QScrollArea {
+  background-color: rgb(255, 255, 255);
+}
+
+QDialog {
+  background-color: rgb(255, 255, 255);
+}
+
+QLabel {
+    font : 12pt;
+    color : rgb(77, 77, 77);
+    min-height : 10px;
+    min-width : 10px;
+}
+
+QAbstractButton {
+    font-family: "DejaVu Sans";
+    background-color: rgb(220, 220, 220);
+    border-color: rgb(180, 180, 180);
+    border-width: 0.5px;
+}
+
+QAbstractButton:hover {
+    background-color: rgb(210, 210, 210);
+    border-color: rgb(180, 180, 180);
+    border-width: 0.5px;
+}
+
+QAbstractButton:pressed {
+    background-color: rgb(200, 200, 200);
+    border-width: 0px;
+}
+
+#button_ok {
+    background-color: rgb(55, 181, 228);
+    border-width: 0px;
+    color: white;
+    font: 22pt;
+}
+
+#button_ok:hover {
+    background-color: rgb(41, 170, 218);
+}
+
+#button_ok:pressed {
+    background-color: rgb(29, 157, 205);
+}
+
+#button_cancel {
+    background-color: rgb(227, 44, 99);
+    border-width: 0px;
+    color: white;
+    font: 22pt;
+}
+
+#button_cancel:hover {
+    background-color: rgb(205, 26, 80);
+}
+
+#button_cancel:pressed {
+    background-color: rgb(181, 31, 76);
+}
+
+#login_msg_error {
+    font : 9pt;
+    color : rgb(191, 43, 28);
+    min-height : 60px;
+}
+
+#label_message {
+    font : 14pt;
+    min-height : 10px;
+    min-width : 10px;
+}
+
+#back_button {
+  background-color: rgb(128, 187, 103);
+}
+
+#label_count {
+    font : 12pt;
+    color : rgb(140, 140, 140);
+    background-color: rgb(240, 240, 240);
+    min-height : 10px;
+    min-width : 40px;
+}
+
+#dialog_login {
+  background-color: rgb(255, 255, 255);
+  min-width : 400px;
+}
+
+#button_cancel, #button_ok {
+  font : 12pt;
+  min-height : 50px;
+  min-width : 120px;
+}

@@ -1,0 +1,137 @@
+
+QAbstractButton {
+    font-family: "DejaVu Sans";
+    border-style: groove;
+    font: 20pt;
+    color: rgb(102, 102, 102);
+    background-color: rgb(242, 242, 242);
+    min-height: 45px;
+    min-width : 100px;
+    border-color: rgb(208, 208, 208);
+    border-width: 0.5px;
+}
+
+#label_input,
+#field_default,
+#field_medium_gray,
+#field_medium_blue,
+#field_medium_orange {
+    background-color : white;
+    border-style : groove;
+    border-width : 0.5px;
+    border-color : rgb(208, 208, 208);
+}
+
+#field_default {
+  font : 22px;
+}
+
+#field_medium_gray, #label_medium_gray {
+  font : 22px;
+  color : rgb(54, 54, 54);
+}
+
+#field_medium_blue, #label_medium_blue {
+  font : 22px;
+  color : rgb(0, 30, 80);
+}
+
+#field_medium_orange, #label_medium_orange {
+  font : 22px;
+  color : rgb(235, 160, 15);
+}
+
+#label_qty, #spin_box_qty, #row_field_price,
+#label_price, #row_field_note, #label_fraction, #row_field_qty,
+#field_fraction {
+  font : 22px;
+  alignment : center;
+}
+
+#field_description {
+  font : 22px;
+  color : #242424;
+}
+
+#label_product {
+  font : bold 24px;
+  alignment : center;
+  color : #242424;
+}
+
+QSpinBox {
+    padding-right: 15px;
+    border-width: 3;
+    height: 40px;
+}
+
+QSpinBox::up-button {
+    subcontrol-position: right;
+    height: 40px;
+    width: 40px;
+}
+
+QSpinBox::down-button {
+    subcontrol-position: left;
+    height: 40px;
+    width: 40px;
+}
+
+#field_invoice {
+    min-width : 120px;
+    max-width : 140px;
+}
+
+#label_position, #label_salesman, #label_payment_term,
+    #label_party, #label_global_discount, #field_invoice, #label_invoice,
+    #label_agent, #label_date, #label_order_number, #label_default {
+    font :  20px;
+    color : rgb(150, 150, 150);
+    min-height : 10px;
+    min-width : 10px;
+}
+
+#field_amount, #field_sign {
+    font : bold 42px;
+    color : rgb(43, 60, 77);
+    min-height : 40px;
+    max-height : 100px;
+}
+
+#field_amount {
+  max-width : 260px;
+  min-width : 180px;
+}
+
+#field_total_amount, #field_change, #label_total_amount, #label_change {
+    color : rgb(50, 65, 75);
+    min-width : 200px;
+}
+
+#field_paid, #label_paid {
+    color : rgb(80, 190, 220);
+}
+
+#table_payment {
+    color : rgb(70, 70, 70);
+    font : 14pt;
+    max-height : 80px;
+}
+
+#table_sale_lines {
+    color : rgb(70, 70, 70);
+    font : 14pt;
+}
+
+#label_paid, #label_change, #label_discount, #label_total_amount,
+#label_discount, #label_change, #label_paid, #label_amount, #label_untaxed_amount, #label_taxes_amount,
+#field_total_amount, #field_change, #field_discount, #field_paid,
+#field_untaxed_amount, #field_taxes_amount {
+    min-height : 10px;
+    font: bold 20pt;
+}
+
+#img_pixmap_pos {
+  min-width: 200pt;
+  min-height: 100pt;
+}

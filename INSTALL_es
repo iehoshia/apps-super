@@ -1,0 +1,352 @@
+Instalación de Tryton POS Client Qt5
+====================================
+
+Esta versión solo es compatible con Tryton 4.0+, se asume que el usuario tiene
+conocimientos básicos previos sobre la instalación y configuración de Tryton,
+especialmente los modulos oficiales relacionados con contabilidad y ventas, no
+es el objeto de esta guia abordar temas de configuración básica.
+
+Para poder instalar Tryton POS Client Qt5 se requieren los siguientes
+paquetes instalados en el sistema:
+
+En Debian, Ubuntu y Derivados, se recomienda usar: $ apt install paquete
+
+ * Python 3.5 or later (http://www.python.org/)
+ * python-setuptools
+ * python3-pyqt5
+ * python3-pyqt5.qtsvg
+ * python3-dateutil
+ * python3-pip
+ * libusb-1.0-0
+ * libusb-1.0-0-dev
+ * libcups2-dev
+ * gcc
+ * python-dev
+ * python3-dev
+ * python3-pil
+
+ * neo (https://bitbucket.org/presik/neox)
+
+Los siguientes paquetes se deben instalar usando PIP
+
+	pip3 install pyserial
+	pip3 install pyusb
+	pip3 install pillow
+	pip3 install qrcode
+	pip3 install paramiko
+	pip3 install pycups
+
+
+Tener en cuenta que algunos paquetes se deben instalar con pip para python3.
+
+Nota: el Cliente POS de momento ha sido testeado en Windows parcialmente, asi que
+no hay garantia de que funcione al 100% en este OS.
+
+Se recomienda instalar Tryton 4.0 creando un ambiente virtual con
+virtualenv.
+
+Los siguientes módulos se deben instalar en la base de datos Tryton
+y deben estar configurados al 100% (se ampliara explicación de la configuración
+más adelante).
+
+Los modulos deberian instalarse aproximadamente en el orden en que estan
+listados de arriba a abajo, empezando por Oficiales, y luego los modulos
+Presik.
+
+
+Modulos Oficiales
+----------------------------------------------------------------------------
+ * trytond_account (http://www.tryton.org/)
+ * trytond_account_invoice (http://www.tryton.org/)
+ * trytond_stock (http://www.tryton.org/)
+ * trytond_sale (http://www.tryton.org/)
+ * trytond_sale_price_list (http://www.tryton.org/)
+ * trytond_sale_invoice_grouping (http://www.tryton.org/)
+ * trytond_account_statement (http://www.tryton.org/)
+
+Sugerencia, instalar en el ambiente virtual usando:
+
+$ pip3 install trytond_module
+
+
+Ingresar al directorio e instalar (dentro del ambiente virtual
+anteriormente creado):
+
+	$ python3 setup.py install
+
+
+Modulos No Oficiales (Presik)
+----------------------------------------------------------------------------
+ * trytonpsk_sale_payment (https://bitbucket.org/presik/trytonpsk_sale_payment)
+ * trytonpsk_sale_w_tax (https://bitbucket.org/presik/trytonpsk_sale_w_tax)
+ * trytonpsk_sale_shop (https://bitbucket.org/presik/trytonpsk_sale_shop)
+ * trytonpsk_sale_pos (https://bitbucket.org/presik/trytonpsk_sale_pos)
+ * trytonpsk_product_onebarcode (https://bitbucket.org/presik/trytonpsk_product_onebarcode)
+ * trytonpsk_sale_salesman (https://bitbucket.org/presik/trytonpsk_sale_salesman)
+ * trytonpsk_sale_discount (https://bitbucket.org/presik/trytonpsk_sale_discount)
+ * trytonpsk_sale_pos_frontend (https://bitbucket.org/presik/trytonpsk_sale_pos_frontend)
+
+Ingresar al directorio e instalar (dentro del ambiente virtual
+anteriormente creado):
+
+Sugerencia, descargar los paquetes desde bitbucket usando en el terminal:
+
+	$ hg clone paquete
+
+Luego instalar:
+
+	$ python3 setup.py install
+
+
+Nota: Verificar todos los modulos anteriores esten en la versión correcta,
+si alguno tiene una versión distinta seguramente el POS no funcionará.
+
+
+
+CREACION DE BASE DE DATOS Y CONFIGURACIÓN DE VENTAS
+----------------------------------------------------------------------------
+
+Se asume que se tienen conocimientos previos sobre Tryton por lo cual se
+resumiran los pasos:
+
+- Crear una base de datos
+
+- Instalar los modulos oficiales en la base de datos:
+        * Administración  > Modulos  >  Modulos
+
+- Instalar los modulos Presik:
+        * Administración  > Modulos  >  Modulos
+
+- Crear la Compañia, Año Fiscal, Plan de Cuentas, Formas de Pago, etc.
+
+
+Configuración del Modulo de Ventas (especialmente sale_shop, sale_pos)
+
+- Crear un Libro de Estado de Cuenta:
+
+	Contabilidad > Configuración > Estados de Cuenta > Libros de Estado de Cuenta
+
+
+En el módulo de Ventas > Configuración:
+
+- Crear una "Tienda" (Shop)
+
+- Crear un "Terminal de Venta" y asignarle al menos un Libro Contable.
+  Ej: Efectivo
+
+
+En Terceros:
+
+- Crear el "Tercero" que sera usado en el POS y asignarlo a las tiendas por defecto.
+
+- Crear al menos un "Empleado" (que será usado como un vendedor cuando la venta
+lo requiera)
+
+
+En el módulo Administración:
+
+- Crear un usuario POS, en:
+    "Administración > Usuarios > Preferencias"
+
+Asignarle la tienda, y el terminal de venta creado anteriormente,
+asi mismo verificar que este usuario tenga "Permisos de Acceso" para el modulo
+de Ventas.
+
+Tambien en la pestaña "Permisos de Acceso" marcar los campos:
+
+Usuario POS Frontend   [X]
+
+Usuario Borra Ventas POS [X]
+
+Este último es opcional si es aplica.
+
+
+
+
+INSTALACION Y CONFIGURACION DEL CLIENTE POS
+----------------------------------------------------------------------------
+
+Requisitos del Cliente POS:
+
+ * libjpeg8
+ * libjpeg62-dev
+ * libfreetype6
+ * libfreetype6-dev
+
+
+Instalelos con: apt-get install paquete
+
+Ahora se debe descargar e instalar el modulo python_escpos, el cual
+es requerido para que funcionen las impresoras POS:
+
+$ hg clone https://bitbucket.org/presik/python_escpos
+
+$ cd python_escpos
+
+$ python setup.py install
+
+
+Descargar el Cliente POS, usando el comando hg clone:
+
+https://bitbucket.org/presik/presik_pos
+
+Con esto obtendrá la ultima version de desarrollo.
+
+Descargue el microframework NEO, desarrollado por presik:
+
+https://bitbucket.org/presik/neo
+
+Instalelo dentro de la carpeta principal de presik_pos,
+los directorios deben quedar así:
+
+|__presik_pos
+     |__app
+     |__doc
+     |__neo
+
+Poner la carpeta descargada en algun lugar de su directorio /home/usuario/miaplicacion
+
+Crear el directorio ".tryton" en el directorio HOME del usuario, ejemplo
+si mi usuario se llama "pedro", la ruta debe quedar así:
+
+  /home/pedro/.tryton
+
+Copiar el archivo "config_pos.ini" del paquete descargado al directorio
+creado ".tryton"
+
+Al final del proceso debe quedar así:
+
+  /home/myuser/.tryton/config_pos.ini
+
+El archivo config_pos.ini define la información de la configuración del
+terminal de venta, y los parametros de conexión, si el archivo queda
+mal o con algún error es probable que el cliente NO funcione o genere errores.
+
+
+Archivo de Configuración del POS
+--------------------------------
+A continuación se explicaran los principales campos en este archivo de
+configuración:
+
+	#Valid protocols: xml, json, local
+	protocol=xml
+
+El protocolo debe ser 'xml' tal como se ve en el archivo por defecto,
+'json' presenta un bug que no se ha resuelto.
+
+	server=192.168.X.XX
+
+El servidor al que se va a conectar el terminal.
+
+	port=8000
+
+El puerto de conexión
+
+	database=DEMO40
+
+El nombre de la base de datos creada
+
+
+	user=admin
+
+El usuario por defecto para el terminal de venta, este debe tener permisos para
+ingresar al terminal, por defecto es admin.
+
+
+Para configurar la impresora se maneja el siguiente formato:
+
+	printer_sale_name=interface,rutadelaimpresora
+
+Las interfaces válidas son tres: usb, cups, network y ssh (en este caso instalar openssh-server)
+
+	Ejemplos
+
+	printer_sale_name=usb,/dev/usb/lp0
+
+	printer_sale_name=cups,EPSON-TM-T20
+
+	printer_sale_name=ssh,usuario@contraseña@ipdelequiporemoto@puerto@/dev/usb/lpX
+
+
+
+
+Id de dispositivo:
+
+	device_id=CAJA-10
+
+El numero Id de la caja a conectarse tal como fue creada en Tryton, en 
+Terminales de Venta, para hallarla se debe usar el boton de herramientas, 
+y click en la opción "Ver Registro..", en el formulario de la Tienda.
+
+
+
+Haga una venta desde Tryton sin POS
+-----------------------------------
+
+Asi que en este punto sin necesidad del Cliente POS usted debería ser
+capaz a través del cliente Tryton 4.0, de hacer ventas:
+
+	>> Ventas > Ventas POS
+
+En caso de no poder hacer ventas a través de este módulo probablemente
+tampoco las podra hacer por el Cliente POS.
+
+Recuerde que para iniciar a hacer ventas debe abrir primero los "Estados
+de Cuenta" a través del Wizard en el Módulo de Ventas:
+	>> Ventas
+		> Estados de Cuenta
+		      > "Abrir Estados de Cuenta"
+
+Y al finalizar el día/turno del cajero debería ir a la misma ruta y
+"Cerrar los Estados de Cuenta", con el fin de que Tryton contabilice
+los pagos y marque las facturas como pagadas.
+
+
+Ejecutar el Cliente Presik POS
+------------------------------
+
+Antes de ejecutar el cliente es muy importante verificar que Tryton
+esta perfectamente configurado y permite hacer ventas por el usuario creado.
+
+Antes de ejecutar el cliente debe asegurarse de que el servidor este
+ejecutandose. Para ejecutar el cliente ingrese al directorio
+"presik_pos" y ejecute:
+
+	$ python3 pospro
+
+
+
+Manejo Básico del Cliente POS
+-----------------------------
+
+El cliente POS funciona con los códigos de producto, asi que los
+productos que no tengan código, no podrán ingresarse.
+
+Para testear el sistema debe crear un producto tipo "Articulo"
+vendible, con código.
+
+
+Oprima la tecla F1 para ver los principales atajos de teclado.
+
+* Ingresar productos:
+Para ingresar un producto, digite el código del producto, y oprima la tecla [+]
+
+
+* Terminar la venta:
+Oprima dos veces la tecla [intro], lo cual hará que el sistema pida el valor a
+pagar. En la barra superior en el campo de información.
+
+
+* Ingresar el pago:
+Ingrese el valor en billetes, monedas de pago del cliente, y oprima la tecla [+],
+para confirmar el pago.
+
+
+* Impresion de factura:
+Si la impresora esta bien configurada, la impresión de la factura es automática,
+en caso de no haber impresora el sistema permite continuar a la siguiente venta,
+si desea reimprimir la factura utilice la tecla [F7].
+
+
+Cualquier bug o error, puede reportarse en bitbucket. Para asesoria
+o soporte adicional, puede contactarme: oscar.alvarez.montero@gmail.com

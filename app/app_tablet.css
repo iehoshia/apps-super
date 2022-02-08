@@ -1,0 +1,164 @@
+
+QAbstractButton {
+    font-family: "DejaVu Sans";
+    border-style: groove;
+    font: 12pt;
+    color: rgb(102, 102, 102);
+    background-color: rgb(242, 242, 242);
+    min-height: 50px;
+    min-width : 110px;
+    border-color: rgb(208, 208, 208);
+    border-width: 0px;
+}
+
+#field_total_amount, #field_amount, #label_input,
+  #field_default,
+  #field_small_blue,
+  #field_small_gray,
+  #field_invoice {
+    background-color : white;
+    border-style : groove;
+    border-width : 0.5px;
+    border-color : rgb(208, 208, 208);
+}
+
+#label_default {
+    font : 14pt;
+    color : rgb(102, 102, 102);
+    min-height : 10px;
+    min-width : 10px;
+}
+
+#field_default {
+    font: bold 14pt;
+    min-height : 10px;
+}
+
+#field_small_gray, #label_small_gray {
+  font : 16px;
+  color : rgb(54, 54, 54);
+}
+
+#field_medium_gray, #label_medium_gray {
+  font : 24px;
+  color : rgb(54, 54, 54);
+}
+
+#field_big_gray, #label_big_gray {
+  font : 32px;
+  color : rgb(54, 54, 54);
+}
+
+#field_small_blue, #label_small_blue  {
+  font : 16px;
+  color : rgb(0, 30, 80);
+}
+
+#field_medium_blue, #label_medium_blue {
+  font : 24px;
+  color : rgb(0, 30, 80);
+}
+
+#field_big_blue, #label_big_blue {
+  font : bold 32px;
+  color : rgb(0, 30, 80);
+}
+
+#field_small_orange, #label_small_orange  {
+  font : 16px;
+  color : rgb(235, 160, 15);
+}
+
+#field_medium_orange, #label_medium_orange {
+  font : 24px;
+  color : rgb(235, 160, 15);
+}
+
+#field_big_orange, #label_big_orange {
+  font : bold 32px;
+  color : rgb(235, 160, 15);
+}
+
+QDialog {
+    min-height : 300px;
+    max-height : 400px;
+    min-width : 500px;
+}
+
+#label_gray {
+    font: bold 14pt;
+    min-height : 10px;
+    min-width : 10px;
+    color: rgb(102, 102, 102);
+}
+
+#label_blue {
+    font: bold 14pt;
+    color: rgb(17, 84, 102);
+    min-height : 10px;
+    min-width : 10px;
+}
+
+#label_message {
+    font : 14pt;
+    min-height : 45px;
+    min-width : 10px;
+}
+
+#field_invoice {
+    font : 15pt;
+    min-height : 45px;
+    min-width : 110px;
+}
+
+#label_input {
+    font : 15pt;
+    min-height : 45px;
+    min-width : 200px;
+}
+
+#field_sign {
+    font: bold 26pt;
+    min-height : 70px;
+    max-width: 100px;
+}
+
+#field_amount {
+    font: 24pt;
+    min-height : 60px;
+    max-width: 310px;
+}
+
+#field_total_amount, #label_total_amount {
+    color : rgb(50, 65, 75);
+}
+
+#table_sale_lines {
+    color : rgb(70, 70, 70);
+    font : 11pt;
+    max-height: 380px;
+}
+
+#label_product, #label_qty, #spin_box_qty, #row_field_price,
+    #label_price, #row_field_note {
+    font : 24px;
+    alignment : center;
+}
+
+QSpinBox {
+    padding-right: 15px;
+    border-width: 3;
+    height: 40px;
+}
+
+QSpinBox::up-button {
+    subcontrol-position: right;
+    height: 38px;
+    width: 38px;
+}
+
+QSpinBox::down-button {
+    subcontrol-position: left;
+    height: 38px;
+    width: 38px;
+}

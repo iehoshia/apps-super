@@ -1,0 +1,19 @@
+# Three steps for translating Qt App
+
+From main directory:
+
+1. Clean obsolete translations:
+
+	pylupdate5 -noobsolete project.pro
+
+2. Do translate .ts file, opening linguist tool:
+	
+        /usr/bin/linguist
+
+3. Release translation
+
+	lrelease app/translations/i18n_es.ts
+
+
+
+

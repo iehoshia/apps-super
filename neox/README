@@ -1,0 +1,46 @@
+Neo Microframework
+==================
+
+Neo is microframework (I don't sure ;)) for to create easy Qt5 interfaces 
+to Tryton Plattform.
+
+
+
+Installing
+----------
+
+See INSTALL
+
+Support
+-------
+
+If you encounter any problems with Tryton, please don't hesitate to ask
+questions on the Tryton bug tracker, mailing list, wiki or IRC channel:
+
+  https://bitbucket.org/presik/neo
+  https://www.presik.com
+
+
+License
+-------
+
+See LICENSE
+
+
+Update Translation
+------------------
+Modify your i18 file and execute in terminal:
+
+$lrelease i18n_es.ts
+
+
+
+Copyright
+---------
+
+See COPYRIGHT
+
+
+For more information please visit the Tryton web site:
+
+  http://www.bitbucket.com/
