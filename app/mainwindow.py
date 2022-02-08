@@ -1585,7 +1585,7 @@ class MainWindow(FrontWindow):
 
     def action_product_selected(self):
         current_agent = 1
-        #EDIT TO CHANGE AGENT
+        #FIX ME EDIT AGENT TO CHANGE
         product, agent = self.search_product_agent(self._current_product_code,
             current_agent)
         if not product or not agent:
