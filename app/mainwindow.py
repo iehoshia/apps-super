@@ -2757,11 +2757,11 @@ class MainWindow(FrontWindow):
             for line_id in purchase['lines']:
                 self._model_purchase_lines.appendId(line_id)
 
-            self.field_purchase_party.setText(purchase['party.name'])
+            self.field_purchase_party.setText(purchase['party.']['name'])
             self.field_purchase_number.setText(purchase['number'])
             self.field_purchase_description.setText(purchase['description'])
             self.field_purchase_date.setDate(purchase['purchase_date'])
-            self.field_purchase_warehouse.setText(purchase['warehouse.name'])
+            self.field_purchase_warehouse.setText(purchase['warehouse.']['name'])
             self.field_purchase_state.setText(purchase['state'])
             self.dialog_purchase.exec_()
 
@@ -4110,12 +4110,27 @@ class MainWindow(FrontWindow):
             return
 
         party = self._search_party(tax_identifier)
-        if isinstance(party, dict):
-            #party_id = party['id']
+        if party:
+            party_id = party['id']
+            addresses = self._PartyAddress.find([('party','=',party_id)])
+            if len(addresses) < 1:
+                self._clear_context()
+                return
+            addresses = addresses[0]
 
-            name = party['name']
-            address = party['address']
-
+            self.party_id = party['id']
+            self.address_id = party['addresses'][0]
+            self.field_party.setText(party['name'])
+            self.field_tax_identifier.setText(party['tax_identifier'])
+            self.field_address.setText(addresses['city'])
+            self._PosSale.write(
+                [self._sale['id']],
+                {
+                    'party': party['id'],
+                    'invoice_address':party['addresses'][0],
+                    'shipment_address':party['addresses'][0],
+                }
+            )
             self.set_amounts()
             self.set_state('add')
         else:
