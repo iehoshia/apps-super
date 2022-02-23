@@ -305,6 +305,7 @@ class MainWindow(FrontWindow):
             'sale_closed': ('error', self.tr('THIS SALE IS CLOSED, YOU CAN NOT TO MODIFY!')),
             'sales_processing': ('error', self.tr('SALES OPENED, PLEASE VERIFY BEFORE CONTINUE!')),
             'something_wrong': ('error', self.tr('SOMETHING WRONG, PLEASE VERIFY WITH ADMINISTRATOR!')),
+            'production_error': ('error', self.tr('ERROR EN PRODUCCIÓN. CONSULTE AL ADMINISTRADOR.')),
             'discount_not_valid': ('warning', self.tr('DISCOUNT VALUE IS NOT VALID!')),
             'add_payment_sale_draft': ('info', self.tr('YOU CAN NOT ADD PAYMENTS TO SALE ON DRAFT STATE!')),
             'enter_quantity': ('question', self.tr('ENTER QUANTITY...')),
@@ -313,6 +314,7 @@ class MainWindow(FrontWindow):
             'payment_valid': ('question', self.tr('VALID PAYMENT')),
             'enter_new_price': ('question', self.tr('ENTER NEW PRICE...')),
             'order_successfully': ('info', self.tr('ORDER SUCCESUFULLY SENT.')),
+            'production_successfully':('info', self.tr('PRODUCCIÓN LISTA')),
             'statement_open': ('info', self.tr('STATEMENT ALREADY OPEN. SYSTEM READY.')),
             'statement_opened': ('info', self.tr('NOT STATEMENT OPEN. A NEW ONE WAS CREATED.')),
             'order_failed': ('warning', self.tr('FAILED SEND ORDER!')),
@@ -467,7 +469,7 @@ class MainWindow(FrontWindow):
             'name': '_Template',
             'model': 'product.template',
             'fields': ('id','name', 'list_price', 'account_category',
-                'producible','active', 
+                'producible','active', 'pos_producible',
                 'photo',
             ),
         }
@@ -544,7 +546,7 @@ class MainWindow(FrontWindow):
                 'add_payment', 'update_description',
                 'get_order2print', 'add_expense',
                 'new_sale', 'workflow_to_end', 'clear_empty_sales',
-                'update_delivery_method',
+                'update_delivery_method', 'create_production',
             )
         }
 
@@ -645,6 +647,10 @@ class MainWindow(FrontWindow):
         ])
         self._expenses = self._Product.find([
             ('template.expense', '=', True),
+        ])
+
+        self._production_products = self._Product.find([
+            ('template.pos_producible','=',True)
         ])
         self._payment_terms = self._PaymentTerm.find([()],
             limit=1)
@@ -897,6 +903,7 @@ class MainWindow(FrontWindow):
         self.create_dialog_select_delivery_method()
         self.create_dialog_search_sales()
         self.create_dialog_expense()
+        self.create_dialog_production()
         self.create_dialog_select_dates()
         self.create_dialog_select_end_date()
         self.create_dialog_stock()
@@ -1363,6 +1370,14 @@ class MainWindow(FrontWindow):
             self.dialog_expense.ok_button.setEnabled(True)
         else:
             self.dialog_expense.ok_button.setEnabled(False)
+
+    def update_production_line(self, value, field):
+        quantity = int(self.row_field_production_quantity.value())
+
+        if quantity > 0:
+            self.dialog_production.ok_button.setEnabled(True)
+        else:
+            self.dialog_production.ok_button.setEnabled(False)
 
     def set_discount_amount(self):
         res = 0
@@ -4541,6 +4556,40 @@ class MainWindow(FrontWindow):
         self.dialog_expense.accepted.connect(self.dialog_expense_accepted)
         self.dialog_expense.ok_button.setEnabled(False)
 
+    def create_dialog_production(self):
+        
+        vbox_product = QVBoxLayout()
+        grid = QGridLayout()
+
+        label_product_production = QLabel(self.tr('PRODUCTO:'))
+        label_product_production.setObjectName('label_product_production')
+        grid.addWidget(label_product_production, 1, 1)
+        self.field_product_production = ComboBox(self, 'product_production',
+                {'values': [(str(e['id']), str(e['template.']['name']))
+                    for e in self._production_products]})
+        grid.addWidget(self.field_product_production, 1, 2)
+
+        label_production_quantity = QLabel(self.tr('CANTIDAD:'))
+        label_production_quantity.setObjectName('label_production_quantity')
+        grid.addWidget(label_production_quantity, 2, 1)
+        self.row_field_production_quantity = QDoubleSpinBox()
+        self.row_field_production_quantity.setObjectName('row_field_expense_amount')
+        self.row_field_production_quantity.setMinimum(0)
+        self.row_field_production_quantity.setMaximum(1000)
+        self.row_field_production_quantity.setDecimals(0)
+        self.row_field_production_quantity.setAlignment(alignRight)
+        grid.addWidget(self.row_field_production_quantity, 2, 2)
+        self.row_field_production_quantity.valueChanged.connect(
+            lambda value: self.update_production_line(value, 'quantity')
+        )
+
+        self.field_product_production.setFocus()
+        vbox_product.addLayout(grid)
+
+        self.dialog_production = QuickDialog(self, 'action', widgets=[vbox_product])
+        self.dialog_production.accepted.connect(self.dialog_production_accepted)
+        self.dialog_production.ok_button.setEnabled(False)
+
     def month_number_spanish(self, number):
         switcher = {
             0: "Enero",
@@ -5373,6 +5422,10 @@ class MainWindow(FrontWindow):
         self.row_field_description.setText('')
         self.dialog_expense.exec_()
 
+    def action_production(self):
+        self.row_field_production_quantity.setValue(0)
+        self.dialog_production.exec_()
+
     def action_delete_line(self, key):
         sale = self.get_current_sale()
         if self._model_sale_lines.rowCount() <= 0 or \
@@ -5465,6 +5518,19 @@ class MainWindow(FrontWindow):
             self.message_bar.set('statement_closed')
         else:
             self.dialog('expense_successfully')
+        return
+
+    def dialog_production_accepted(self):
+        
+        product = self.field_product_production.get_id()
+        quantity = float(str(self.row_field_production_quantity.value()))
+
+        res = self._PosSale.create_production([], product, quantity, self._context)
+
+        if res['result'] == 'done':
+            self.dialog('production_successfully')
+        else:
+            self.dialog('production_error')            
         return
 
     def addPaymentLine(self, line_id):
