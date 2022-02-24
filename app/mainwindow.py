@@ -421,7 +421,7 @@ class MainWindow(FrontWindow):
             'name': '_Party',
             'model': 'party.party',
             'fields': ('id', 'name', 'tax_identifier.code', 'addresses',
-                'addresses', 'city', 'contact_mechanisms', 'email', 'phone'),
+                'city', 'contact_mechanisms', 'email', 'phone'),
             'methods': ('new_party', 'search_party'),
         }
 
@@ -698,7 +698,7 @@ class MainWindow(FrontWindow):
         #])
 
         self._action_report_purchase, = self._ActionReport.find([
-            ('report_name', '=', 'simplified.purchase'),
+            ('report_name', '=', 'purchase.purchase'),
         ])
 
         self._action_report_statement, = self._ActionReport.find([
@@ -1207,8 +1207,7 @@ class MainWindow(FrontWindow):
         if self._sale['state'] and self._sale['state'] != 'draft':
             return
         error = False
-        #if self._input_text == '':
-        #    return
+
         if self._state not in ('add', 'cancel','accept'):
             return
         if self._current_line_id is None:
@@ -1428,9 +1427,6 @@ class MainWindow(FrontWindow):
                 self._sale['state']=='processing' or \
                 self._sale['state']=='done':
             return
-        #dialog = self.dialog('confirm_sale', response=True)
-        #response = dialog.exec_()
-        #if response == DIALOG_REPLY_YES:
         self.set_state('accept')
         lines = self._PosSaleLine.find([('sale','=',self._sale['id'])])
         res = self._PosSale.process_sale([], self._sale['id'], \
@@ -1438,18 +1434,6 @@ class MainWindow(FrontWindow):
         if res['res'] != 'ok' or res.get('status') and res.get('status') != 'ok':
             self.message_bar.set(res['msg'])
             return
-        #dialog = self.dialog('invoice_posted')
-        #dialog.exec_()
-        if res['in_percentage'] == True:
-            message = self.tr('You have consumed the follow '
-                'percentage of your invoices: ') + res['percentage']
-            info_dialog = QuickDialog(self, 'info', string=message)
-            info_dialog.exec_()
-        if res['in_date'] == True:
-            message = self.tr('You have the follow days '
-                'to renew the authorization: ') + res['days']
-            info_dialog = QuickDialog(self, 'info', string=message)
-            info_dialog.exec_()
         self.field_invoice.setText(res['msg'])
         self.field_invoice_state.setText(self.tr('PROCESSING'))
         self._sale['state'] = 'processing'
@@ -1582,9 +1566,10 @@ class MainWindow(FrontWindow):
     def action_create_party(self):
         if self._current_line_id is None:
             return
-        self.field_name.setText("")
         self.field_tax_identifier.setText("")
+        self.field_name.setText("")
         self.field_city.setText("")
+        self.field_tax_identifier.setFocus()
         res = self.dialog_create_party.exec_()
 
         if res == DIALOG_REPLY_NO:
@@ -2593,16 +2578,6 @@ class MainWindow(FrontWindow):
         dialog.exec_()
         if res['res'] == 'error':
             return self.dialog(res['msg']).exec_()
-        if res['in_percentage'] == True:
-            message = self.tr('You have consumed the follow '
-                'percentage of your invoices: ') + res['percentage']
-            info_dialog = QuickDialog(self, 'info', string=message)
-            info_dialog.exec_()
-        if res['in_date'] == True:
-            message = self.tr('You have the follow days '
-                'to renew the authorization: ') + res['days']
-            info_dialog = QuickDialog(self, 'info', string=message)
-            info_dialog.exec_()
         if res['return_sale']:
             return_sale = self.get_return_sale(res['return_sale'])
             self.print_odt_short_invoice(return_sale, direct_print=True, reprint=False)
@@ -2623,6 +2598,7 @@ class MainWindow(FrontWindow):
 
         dom = [
                 ('active', '=', True),
+                ('salable','=',True),
             ]
 
         products = self._Product.find(dom, 
@@ -3881,7 +3857,7 @@ class MainWindow(FrontWindow):
             #('active', '=', True),],
         #])
         domain.append([('template.code','=',code),
-            ('active','=',True)
+            ('active','=',True),
         ])
         products = self._Product.find(domain,
             context=self.stock_context)
@@ -3894,18 +3870,9 @@ class MainWindow(FrontWindow):
         return product
 
     def _search_party(self, tax_identifier):
-        #domain = [('tax_identifier','=',tax_identifier)]
-        party = None
-        try:
-            party = self._Party.search_party([], tax_identifier, self._context)
-
-            if not isinstance(parties, dict):
-                self.message_bar.set('party_not_found')
-
-            return party
-        except:
-            return party
-
+        party = self._Party.search_party([], tax_identifier, self._context)
+        return party
+        
     def _search_party_by_name(self, name):
         domain = [('name','=',name)]
         parties = self._Party.find(domain)
@@ -4109,15 +4076,8 @@ class MainWindow(FrontWindow):
         if not tax_identifier:
             return
 
-        party = self._search_party(tax_identifier)
-        if party:
-            party_id = party['id']
-            addresses = self._PartyAddress.find([('party','=',party_id)])
-            if len(addresses) < 1:
-                self._clear_context()
-                return
-            addresses = addresses[0]
-
+        self.party = self._search_party(tax_identifier)
+        if self.party:
             self.party_id = party['id']
             self.address_id = party['addresses'][0]
             self.field_party.setText(party['name'])
@@ -4299,11 +4259,7 @@ class MainWindow(FrontWindow):
         label_tax_identifier.setObjectName('label_tax_identifier')
         grid.addWidget(label_tax_identifier, 1, 1)
         self.field_tax_identifier = QLineEdit()
-        #self.field_tax_identifier = CustomQLineEdit()
         self.field_tax_identifier.setObjectName('field_tax_identifier')
-        #self.field_tax_identifier.textEdited.connect(
-        #    lambda value: self.update_nit(value, 'tax_identifier')
-        #)
         self.field_tax_identifier.editingFinished.connect(self.update_nit)
         grid.addWidget(self.field_tax_identifier, 1, 2)
 
@@ -4312,9 +4268,6 @@ class MainWindow(FrontWindow):
         grid.addWidget(label_name, 2, 1)
         self.field_name = QLineEdit()
         self.field_name.setObjectName('field_name')
-        self.field_name.textChanged.connect(
-            lambda value: self.update_party(value, 'name')
-        )
         grid.addWidget(self.field_name, 2, 2)
 
         label_city = QLabel(self.tr('CITY:'))
@@ -4322,36 +4275,7 @@ class MainWindow(FrontWindow):
         grid.addWidget(label_city, 3, 1)
         self.field_city = QLineEdit()
         self.field_city.setObjectName('field_city')
-
-        self.field_city.textChanged.connect(
-            lambda value: self.update_party(value, 'city'),
-        )
         grid.addWidget(self.field_city, 3, 2)
-
-        label_email = QLabel(self.tr('EMAIL:'))
-        label_email.setObjectName('label_email')
-        #grid.addWidget(label_email, 4, 1)
-        self.field_email = QLineEdit()
-        self.field_email.setObjectName('field_email')
-
-        #self.field_email.textChanged.connect(
-        #    lambda value: self.update_party(value, 'email'),
-        #)
-        #grid.addWidget(self.field_email, 4, 2)
-
-        label_phone = QLabel(self.tr('PHONE:'))
-        label_phone.setObjectName('label_phone')
-        #grid.addWidget(label_phone, 5, 1)
-
-        self.field_phone = QLineEdit()
-        reg_phone = QRegExp("[0-9]")
-        phone_validator = QRegExpValidator(reg_phone, self.field_phone)
-        #self.field_phone.setValidator(phone_validator)
-        self.field_phone.setObjectName('field_phone')
-        #self.field_phone.textChanged.connect(
-        #    lambda value: self.update_party(value, 'phone'),
-        #)
-        #grid.addWidget(self.field_phone, 5, 2)
 
         vbox_party.addLayout(grid)
         self.dialog_create_party = QuickDialog(self, 'action', widgets=[vbox_party], disable_cancel=True)
@@ -4905,101 +4829,52 @@ class MainWindow(FrontWindow):
         if difference == 0 and valid_voucher and self._sale['state'] == 'draft':
             self.message_bar.set('payment_valid')
             self.dialog_confirm_payment.ok_button.setEnabled(True)
-            #self.dialog_confirm_payment.cancel_button.setEnabled(False)
-            #self.dialog_confirm_payment.disable_cancel=True
-            #self.dialog_confirm_payment.setWindowFlag(Qt.WindowCloseButtonHint, False)
             dialog = self.dialog('invoice_posted')
             dialog.exec_()
-            #self.dialog_confirm_payment.show()
+
         if self._sale['state'] == 'processing' and \
                 difference <= 0 and valid_voucher:
             self.message_bar.set('payment_valid')
             self.dialog_confirm_payment.ok_button.setEnabled(True)
-            #self.dialog_confirm_payment.cancel_button.setEnabled(False)
-            #self.dialog_confirm_payment.disable_cancel=True
-            #self.dialog_confirm_payment.setWindowFlag(Qt.WindowCloseButtonHint, False)
-            #self.dialog_confirm_payment.show()
+
         else:
             self.dialog_confirm_payment.ok_button.setEnabled(False)
-            #self.dialog_confirm_payment.cancel_button.setEnabled(True)
-            #self.dialog_confirm_payment.disable_cancel=False
-            #self.dialog_confirm_payment.setWindowFlag(Qt.WindowCloseButtonHint, True)
 
-    def update_nit(self):#, value, field):
-
-        #if field == 'tax_identifier':
-        value = self.field_tax_identifier.text()
-        self.party_line['tax_identifier'] = value
-
-        party = None
+    def update_nit(self):
         tax_identifier = str(self.field_tax_identifier.text())
         name = str(self.field_name.text())
         city = str(self.field_city.text())
-        email = str(self.field_email.text())
-        phone = str(self.field_phone.text())
-        is_valid_phone = is_valid_email = True
+        is_valid_phone = is_valid_email = False
 
         if tax_identifier == 'CF' or tax_identifier == 'cf' or tax_identifier == '00':
-            #party = self._search_party("CF")
-            #if not party:
-            #    return self.dialog('missing_party_configuration').exec_()
-            self.party_id = self._default_party_id
-            self.field_name.setText('CONSUMIDOR FINAL')
-            self.field_tax_identifier.setText('CF')
-            self.field_city.setText('CIUDAD')
-            self.address_id = self._default_address['id']
-            self.party_line['tax_identifier'] = 'CF'
-        elif tax_identifier == 'CIN' and len(name) == 0:
-            self.party_id = None
-            self.address_id = None
-            self.field_name.setText('')
-            self.field_city.setText('')
-            self.field_phone.setText('')
-            self.field_email.setText('')
+            party = self._search_party("CF")
+            if not party:
+                return self.dialog('missing_party_configuration').exec_()
+            self.party_id = party['id']
+            self.field_name.setText(party['name'])
+            self.field_city.setText(party['city'])
+            self.party = party
+            self.address_id = party['address']            
         elif len(tax_identifier)>5:
             party = self._search_party(tax_identifier)
+            print("party", party)
             if party:
-                #self.party_id = party['id']
-                #self.address_id = party['addresses'][0]
+                self.party_id = party['id']
+                self.address_id = party['address']
                 self.field_name.setText(party['name'])
-                self.field_city.setText(party['address'])
-                #self.party = party
-            #else:
-            #    self.party_id = None
-            #    self.address_id = None
+                self.field_city.setText('CIUDAD')
+                self.party = party
         elif len(tax_identifier)==0:
             self.field_name.setText('')
             self.field_city.setText('')
-            self.field_phone.setText('')
-            self.field_email.setText('')
-
-
-        self._is_valid_email = is_valid_email
-        self._is_valid_phone = is_valid_phone
-
+        
         if len(tax_identifier)>5 and \
                 len(self.field_name.text()) >3 \
-                and len(self.field_city.text())>3 \
-                and is_valid_email and is_valid_phone:
+                and len(self.field_city.text())>3 :
             self.dialog_create_party.ok_button.setEnabled(True)
-        elif tax_identifier in ['CF', 'cf', '00', 'CIN'] and \
+        elif tax_identifier in ['CF', 'cf', '00', 'VAR'] and \
                 len(self.field_name.text()) > 3 \
                 and len(self.field_city.text())>3:
-            self.dialog_create_party.ok_button.setEnabled(True)
-            self._tax_identifier = tax_identifier
-        else:
-            self.dialog_create_party.ok_button.setEnabled(False)
-            self._tax_identifier = None
-
-    def update_party(self, value, field):
-
-        tax_identifier = str(self.field_tax_identifier.text())
-
-        is_valid_phone = is_valid_email = True
-
-        if len(self.field_tax_identifier.text())>=2 and \
-                len(self.field_name.text()) >0 and len(self.field_city.text())>0 \
-                and is_valid_email and is_valid_phone:
             self.dialog_create_party.ok_button.setEnabled(True)
         else:
             self.dialog_create_party.ok_button.setEnabled(False)
@@ -5069,107 +4944,29 @@ class MainWindow(FrontWindow):
 
     def dialog_create_party_accepted(self):
 
-        if not self.party_line:
-            return
-
-        if self.party_line.get('tax_identifier'):
-            tax_identifier = self.party_line['tax_identifier']
-        else:
-            self.message_bar.set('party_not_found')
-            return
-
+        tax_identifier = str(self.field_tax_identifier.text())
         name = str(self.field_name.text())
         city = str(self.field_city.text())
-
-        party = self._Party.new_party([],
-            {'tax_identifier':tax_identifier,
-                'name':name,
-                'city':city,
-            },  self._context)
-
-        self._PosSale.write([self._sale['id']], {
-                'party': party['id'],
-                'invoice_party':party['id'],
-                'shipment_party':party['id'],
-                'invoice_address': party['address'],
-                'shipment_address': party['address'],
-            }
-        )
 
         self.field_party.setText(name)
         self.field_nit.setText(str(tax_identifier))
         self.field_address.setText(city)
-        '''
-        if self.party_id is None:
-            if tax_identifier == 'CIN':
-                party = self._Party.new_party([], {
-                    'name': name,
-                }, self._context)
-            else:
-                party = self._Party.new_party([], {
-                    'name': name,
-                    'tax_identifier': tax_identifier,
-                }, self._context)
-            address = self._PartyAddress.new_address([], {
-                'party': party['id'],
-                'city': city,
-                }, self._context)
-            self.field_party.setText(party['name'])
-            self.field_nit.setText(party['tax_identifier'])
-            self.field_address.setText(address['city'])
-            self._PosSale.write([self._sale['id']], {
-                    'party': party['id'],
-                    'invoice_party': party['id'],
-                    'shipment_party':party['id'],
-                    'invoice_address': address['id'],
-                    'shipment_address': address['id'],
-                }
-            )
-            self.party_id = party['id']
-        else:
-            self._Party.write([self.party_id],{
-                'name':name,
-                }
-            )
-            self._PartyAddress.write([self.address_id],{
-                'city':city,
-                }
-            )
-            self._PosSale.write([self._sale['id']], {
-                    'party': self.party['id'],
-                    'invoice_party':self.party['id'],
-                    'shipment_party':self.party['id'],
-                    'invoice_address': self.ad['id'],
-                    'shipment_address': self.party['id'],
-                }
-            )
 
-            if self._is_valid_email and len(email)>0 \
-                    and not self.party.get('email'):
-                contact_email = self._PartyContact.new_mechanism([], {
-                    'party': self.party['id'],
-                    'type':'email',
-                    'value':email
-                    }, self._context)
-            if self._is_valid_phone and len(phone)>0 and \
-                    not self.party.get('phone'):
-                contact_phone = self._PartyContact.new_mechanism([], {
-                    'party': self.party['id'],
-                    'type':'phone',
-                    'value':phone
-                    }, self._context)
-            self.field_party.setText(name)
-            self.field_nit.setText(str(tax_identifier))
-            self.field_address.setText(city)
-        '''
+        self._PosSale.write([self._sale['id']], {
+                'party': self.party['id'],
+                'invoice_party': self.party['id'],
+                'shipment_party': self.party['id'],
+                'invoice_address': self.party['address'],
+                'shipment_address': self.party['address'],
+            }
+        )
 
-        self.party_line = {}
         self.field_tax_identifier.setFocus()
         self.field_name.setText('')
         self.field_city.setText('')
-        self.field_email.setText('')
-        self.field_phone.setText('')
         self.dialog_create_party.ok_button.setEnabled(False)
+
+
         self.set_state('add')
         self._clear_context()
 

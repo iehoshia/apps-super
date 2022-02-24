@@ -41,7 +41,7 @@ class ButtonsFunction(QGridLayout):
             ['button_search_sale', self.tr('S. SALE'), 'action_search_sale'],
             ['button_cancel', self.tr('CANCEL'), 'action_cancel'],
             #['button_credit_sale', self.tr('CREDIT SALE'), 'action_credit_sale'],
-            ['button_production', self.tr('PRODUCIR'), 'action_production'],
+            ['button_production', self.tr('PRODUCCIÓN'), 'action_production'],
             
             ['button_invoice_reprint', self.tr('REPRINT'), 'action_re_print_invoice'],
             #['button_product_by_location', self.tr('P. BY LOCATION'), \
