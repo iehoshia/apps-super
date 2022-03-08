@@ -141,7 +141,7 @@ class ProductButtons(QGridLayout):
                 parent,
                 id=value[0],
                 icon=get_png_icon(name_icon),
-                desc=value[1],
+                desc='Q. '+ value[3] + ' - ' + value[1],
                 method=value[2],
                 name_style='category_button'
             )

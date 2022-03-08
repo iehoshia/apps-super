@@ -226,33 +226,39 @@ class MainWindow(FrontWindow):
         one = float(str(self.field_statement_one.value()))
         currency = float(str(self.field_statement_currency.value()))
         surplus = float(str(self.field_statement_surplus.value()))
+        surplus_potato = float(str(self.field_statement_surplus_potato.value()))
+        surplus_gizzard = float(str(self.field_statement_surplus_gizzard.value()))
 
-        end_balance = str(self.field_statement_end_balance.value())
+        start_balance = float(self.field_statement_end_balance.value())
+        end_balance = float(self.field_statement_end_balance.value())
 
         cash_amount = two_hundred * 200 + one_hundred * 100 + \
             fifty * 50 + twenty * 20 + ten * 10 + fifth * 5 + \
             one + currency
 
-        difference = float(end_balance) - cash_amount 
+        difference = start_balance + end_balance - cash_amount # - surplus 
 
-        if difference > Decimal('0.00'):
-            self.dialog('difference_must_zero').exec_()
-            return
+        #if difference > Decimal('0.00'):
+        #    self.dialog('difference_must_zero').exec_()
+        #    return
 
         result = self._Statement.check_open_statement([], self._context)
         if result.get('error'):
             self.dialog('more_than_one_statement_open')
             return
         if result['is_open'] == True:
-            processing_sale = self._Statement.check_statement_before_close([],
+            result = self._Statement.check_statement_before_close([],
                 self._shop['id'],
                 self._context)
-            if processing_sale['to_close'] == False:
+            if result['to_close'] == False:
                 return self.dialog('sales_processing').exec_()
             self.action_print_statement()
             self._Statement.close_statement([],
                 self._shop['id'],
+                cash_amount,
                 surplus,
+                surplus_potato,
+                surplus_gizzard,
                 self._context)
             self.dialog('statement_closed')
             self.message_bar.set('statement_closed')
@@ -406,10 +412,12 @@ class MainWindow(FrontWindow):
             'name':'_Statement',
             'model':'account.statement',
             'fields': ('id','name','state','date','journal','end_balance',
+                'start_balance','surplus','leftout',
                 'calculated_end_balance'),
             'methods': ('new_statement','close_statement',
                 'check_open_statement',
-                'check_statement_before_close'),
+                'check_statement_before_close',
+                'previous_leftout'),
         }
         _StatementLine = {
             'name':'_StatementLine',
@@ -455,7 +463,7 @@ class MainWindow(FrontWindow):
             'name': '_Product',
             'model': 'product.product',
             'fields': ('template', 'template.name', 'code', 'description',
-                'template.brand','template.barcode',
+                'template.brand','template.barcode', 'template.code',
                 'template.account_category', 'quantity',
                 'template.list_price', 'template.producible', 'template.name',
                 'active',
@@ -1535,18 +1543,24 @@ class MainWindow(FrontWindow):
             self.dialog('more_than_one_statement_open')
             return
         if result['is_open'] == False:
-            self.dialog_start_balance.exec_()
+            #leftout = self._Statement.previous_leftout([], self._context)
+            #previous_leftout = leftout['previous_leftout']
+            #self.field_previous_leftout.setText(str(previous_leftout))
+            #self.field_previous_leftout.setEnabled(False)
+
+            res = self.dialog_start_balance.exec_()
+
             amount = self.field_start_balance.text()
 
-            if amount and amount.isdigit():
+            if amount and float(amount):
                 res = self._Statement.new_statement([], amount, self._context)
                 if res['result'] == True:
                     self.field_start_balance.setText('')
                     self.dialog('statement_opened')
 
-                    self.createNewSale()
                     self.set_state('add')
                     self.message_bar.set('system_ready')
+                    self.createNewSale()
                 else:
                     self.dialog('statement_closed')
                     self.close()
@@ -2599,11 +2613,12 @@ class MainWindow(FrontWindow):
         dom = [
                 ('active', '=', True),
                 ('salable','=',True),
+                ('consumable','=',False),
             ]
 
         products = self._Product.find(dom, 
-            order=[('id', 'DESC')],
-            limit=30,
+            order=[('template.code', 'ASC')],
+            limit=20,
             context=self.stock_context
         )
         self.dialog_search_products.set_from_values(products)
@@ -2758,7 +2773,6 @@ class MainWindow(FrontWindow):
                 ('id','=',statement_id),
             ], limit=1)
         except:
-
             self.dialog('more_than_one_statement_open')
             return
 
@@ -2766,8 +2780,25 @@ class MainWindow(FrontWindow):
             ('statement', '=', statement_id)
         ])
 
+        start_balance = statement['start_balance']
+        end_balance = statement['calculated_end_balance']
+        
+        leftout = Decimal('0')
+        try:
+            if statement['leftout']:
+                leftout = statement['leftout']
+        except:
+            pass
+
+        #difference =  float(end_balance) - cash_amount - surplus
+        difference = start_balance + end_balance + leftout
+
         self.field_statement_date.setDate(statement['date'])
-        self.field_statement_end_balance.setValue(statement['calculated_end_balance'])
+
+        self.field_statement_start_balance.setValue(start_balance)
+        self.field_statement_end_balance.setValue(end_balance)
+        self.field_statement_previous_leftout.setValue(leftout)
+
         self.field_statement_two_hundred.setValue(0)
         self.field_statement_one_hundred.setValue(0)
         self.field_statement_fifty.setValue(0)
@@ -2778,9 +2809,13 @@ class MainWindow(FrontWindow):
         self.field_statement_currency.setValue(0)
         self.field_statement_voucher.setValue(0)
         self.field_statement_surplus.setValue(0)
+        self.field_statement_surplus_potato.setValue(0)
+        self.field_statement_surplus_gizzard.setValue(0)
+        self.field_statement_count.setValue(0)
 
+        self.field_statement_difference.setValue(difference)
+        self._model_statement_lines.setDomain([])
         if len(statement_lines) > 0:
-
 
             self._model_statement_lines.setDomain(domain=None)
 
@@ -2788,8 +2823,10 @@ class MainWindow(FrontWindow):
                 line_id = line['id']
                 self._model_statement_lines.appendId(line_id)
 
+            self.dialog_statement.ok_button.setEnabled(False)
             self.dialog_statement.exec_()
         else:
+            self.dialog_statement.ok_button.setEnabled(False)
             self.dialog_statement.exec_()
             #self.dialog('no_statement_lines')
             return
@@ -3083,21 +3120,45 @@ class MainWindow(FrontWindow):
         self.field_statement_date.setEnabled(False)
         grid.addWidget(self.field_statement_date, 1, 2)
 
-        label_statement_end_balance = QLabel(self.tr('TOTAL:'))
+        label_statement_start_balance = QLabel(self.tr('SALDO INICIAL:'))
+        label_statement_start_balance.setObjectName('label_statement_start_balance')
+        #grid.addWidget(label_statement_start_balance, 2, 1)
+        self.field_statement_start_balance = QDoubleSpinBox()
+        self.field_statement_start_balance.setObjectName('field_statement_start_balance')
+        self.field_statement_start_balance.setMinimum(0)
+        self.field_statement_start_balance.setMaximum(100000)
+        self.field_statement_start_balance.setDecimals(2)
+        self.field_statement_start_balance.setAlignment(alignRight)
+        self.field_statement_start_balance.setEnabled(False)
+        #grid.addWidget(self.field_statement_start_balance, 2, 2)
+
+        label_statement_previous_leftout = QLabel(self.tr('SALDO PIEZAS ANTERIOR:'))
+        label_statement_previous_leftout.setObjectName('label_statement_previous_leftout')
+        #grid.addWidget(label_statement_previous_leftout, 2, 3)
+        self.field_statement_previous_leftout = QDoubleSpinBox()
+        self.field_statement_previous_leftout.setObjectName('field_statement_previous_leftout')
+        self.field_statement_previous_leftout.setMinimum(0)
+        self.field_statement_previous_leftout.setMaximum(100000)
+        self.field_statement_previous_leftout.setDecimals(2)
+        self.field_statement_previous_leftout.setAlignment(alignRight)
+        self.field_statement_previous_leftout.setEnabled(False)
+        #grid.addWidget(self.field_statement_previous_leftout, 2, 4)
+
+        label_statement_end_balance = QLabel(self.tr('VENTAS - GASTOS:'))
         label_statement_end_balance.setObjectName('label_statement_end_balance')
-        grid.addWidget(label_statement_end_balance, 2, 1)
+        #grid.addWidget(label_statement_end_balance, 3, 1)
         self.field_statement_end_balance = QDoubleSpinBox()
         self.field_statement_end_balance.setObjectName('field_statement_end_balance')
         self.field_statement_end_balance.setMinimum(0)
         self.field_statement_end_balance.setMaximum(100000)
         self.field_statement_end_balance.setDecimals(2)
         self.field_statement_end_balance.setAlignment(alignRight)
-        self.field_statement_end_balance.setReadOnly(True)
-        grid.addWidget(self.field_statement_end_balance, 2, 2)
+        self.field_statement_end_balance.setEnabled(False)
+        #grid.addWidget(self.field_statement_end_balance, 3, 2)
 
-        label_statement_count = QLabel(self.tr('TOTAL DE CONTEO:'))
+        label_statement_count = QLabel(self.tr('EFECTIVO - PIEZAS SOBRANTES:'))
         label_statement_count.setObjectName('label_statement_count')
-        grid.addWidget(label_statement_count, 3, 1)
+        #grid.addWidget(label_statement_count, 3, 3)
         self.field_statement_count = QDoubleSpinBox()
         self.field_statement_count.setObjectName('field_statement_count')
         self.field_statement_count.setMinimum(-100000)
@@ -3105,11 +3166,11 @@ class MainWindow(FrontWindow):
         self.field_statement_count.setDecimals(2)
         self.field_statement_count.setAlignment(alignRight)
         self.field_statement_count.setEnabled(False)
-        grid.addWidget(self.field_statement_count, 3, 2)
+        #grid.addWidget(self.field_statement_count, 3, 4)
 
         label_statement_difference = QLabel(self.tr('DIFERENCIA:'))
         label_statement_difference.setObjectName('label_statement_difference')
-        grid.addWidget(label_statement_difference, 4, 1)
+        #grid.addWidget(label_statement_difference, 4, 1)
         self.field_statement_difference = QDoubleSpinBox()
         self.field_statement_difference.setObjectName('field_statement_difference')
         self.field_statement_difference.setMinimum(-100000)
@@ -3117,11 +3178,11 @@ class MainWindow(FrontWindow):
         self.field_statement_difference.setDecimals(2)
         self.field_statement_difference.setAlignment(alignRight)
         self.field_statement_difference.setEnabled(False)
-        grid.addWidget(self.field_statement_difference, 4, 2)
+        #grid.addWidget(self.field_statement_difference, 4, 2)
 
         label_statement_two_hundred = QLabel(self.tr('BILLETES DE 200:'))
         label_statement_two_hundred.setObjectName('label_statement_two_hundred')
-        grid.addWidget(label_statement_two_hundred, 5, 1)
+        grid.addWidget(label_statement_two_hundred, 1, 3)
         self.field_statement_two_hundred = QDoubleSpinBox()
         self.field_statement_two_hundred.setObjectName('field_statement_two_hundred')
         self.field_statement_two_hundred.setMinimum(0)
@@ -3131,11 +3192,11 @@ class MainWindow(FrontWindow):
         self.field_statement_two_hundred.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_two_hundred, 5, 2)
+        grid.addWidget(self.field_statement_two_hundred, 1, 4)
 
         label_statement_one_hundred = QLabel(self.tr('BILLETES DE 100:'))
         label_statement_one_hundred.setObjectName('label_statement_one_hundred')
-        grid.addWidget(label_statement_one_hundred, 6, 1)
+        grid.addWidget(label_statement_one_hundred, 2, 1)
         self.field_statement_one_hundred = QDoubleSpinBox()
         self.field_statement_one_hundred.setObjectName('field_statement_one_hundred')
         self.field_statement_one_hundred.setMinimum(0)
@@ -3145,11 +3206,11 @@ class MainWindow(FrontWindow):
         self.field_statement_one_hundred.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_one_hundred, 6, 2)
+        grid.addWidget(self.field_statement_one_hundred, 2, 2)
 
         label_statement_fifty = QLabel(self.tr('BILLETES DE 50:'))
         label_statement_fifty.setObjectName('label_statement_fifty')
-        grid.addWidget(label_statement_fifty, 7, 1)
+        grid.addWidget(label_statement_fifty, 2, 3)
         self.field_statement_fifty = QDoubleSpinBox()
         self.field_statement_fifty.setObjectName('field_statement_fifty')
         self.field_statement_fifty.setMinimum(0)
@@ -3159,11 +3220,11 @@ class MainWindow(FrontWindow):
         self.field_statement_fifty.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_fifty, 7, 2)
+        grid.addWidget(self.field_statement_fifty, 2, 4)
 
         label_statement_twenty = QLabel(self.tr('BILLETES DE 20:'))
         label_statement_twenty.setObjectName('label_statement_twenty')
-        grid.addWidget(label_statement_twenty, 8, 1)
+        grid.addWidget(label_statement_twenty, 3, 1)
         self.field_statement_twenty = QDoubleSpinBox()
         self.field_statement_twenty.setObjectName('field_statement_twenty')
         self.field_statement_twenty.setMinimum(0)
@@ -3173,11 +3234,11 @@ class MainWindow(FrontWindow):
         self.field_statement_twenty.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_twenty, 8, 2)
+        grid.addWidget(self.field_statement_twenty, 3, 2)
 
         label_statement_ten = QLabel(self.tr('BILLETES DE 10:'))
         label_statement_ten.setObjectName('label_statement_ten')
-        grid.addWidget(label_statement_ten, 9, 1)
+        grid.addWidget(label_statement_ten, 3, 3)
         self.field_statement_ten = QDoubleSpinBox()
         self.field_statement_ten.setObjectName('field_statement_ten')
         self.field_statement_ten.setMinimum(0)
@@ -3187,11 +3248,11 @@ class MainWindow(FrontWindow):
         self.field_statement_ten.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_ten, 9, 2)
+        grid.addWidget(self.field_statement_ten, 3, 4)
 
         label_statement_fifth = QLabel(self.tr('BILLETES DE 5:'))
         label_statement_fifth.setObjectName('label_statement_fifth')
-        grid.addWidget(label_statement_fifth, 10, 1)
+        grid.addWidget(label_statement_fifth, 4, 1)
         self.field_statement_fifth = QDoubleSpinBox()
         self.field_statement_fifth.setObjectName('field_statement_fifth')
         self.field_statement_fifth.setMinimum(0)
@@ -3201,11 +3262,11 @@ class MainWindow(FrontWindow):
         self.field_statement_fifth.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_fifth, 10, 2)
+        grid.addWidget(self.field_statement_fifth, 4, 2)
 
         label_statement_one = QLabel(self.tr('BILLETES DE 1:'))
         label_statement_one.setObjectName('label_statement_one')
-        grid.addWidget(label_statement_one, 11, 1)
+        grid.addWidget(label_statement_one, 4, 3)
         self.field_statement_one = QDoubleSpinBox()
         self.field_statement_one.setObjectName('field_statement_one')
         self.field_statement_one.setMinimum(0)
@@ -3215,11 +3276,11 @@ class MainWindow(FrontWindow):
         self.field_statement_one.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_one, 11, 2)
+        grid.addWidget(self.field_statement_one, 4, 4)
 
         label_statement_currency = QLabel(self.tr('MONEDAS:'))
         label_statement_currency.setObjectName('label_statement_currency')
-        grid.addWidget(label_statement_currency, 12, 1)
+        grid.addWidget(label_statement_currency, 5, 1)
         self.field_statement_currency = QDoubleSpinBox()
         self.field_statement_currency.setObjectName('field_statement_currency')
         self.field_statement_currency.setMinimum(0)
@@ -3229,11 +3290,11 @@ class MainWindow(FrontWindow):
         self.field_statement_currency.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_currency, 12, 2)
+        grid.addWidget(self.field_statement_currency, 5, 2)
 
         label_statement_voucher = QLabel(self.tr('VOUCHER:'))
         label_statement_voucher.setObjectName('label_statement_voucher')
-        grid.addWidget(label_statement_voucher, 13, 1)
+        grid.addWidget(label_statement_voucher, 5, 3)
         self.field_statement_voucher = QDoubleSpinBox()
         self.field_statement_voucher.setObjectName('field_statement_voucher')
         self.field_statement_voucher.setMinimum(0)
@@ -3243,21 +3304,49 @@ class MainWindow(FrontWindow):
         self.field_statement_voucher.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_voucher, 13, 2)
+        grid.addWidget(self.field_statement_voucher, 5, 4)
 
-        label_statement_surplus = QLabel(self.tr('SOBRANTE:'))
+        label_statement_surplus = QLabel(self.tr('SOBRANTE TORTILLA:'))
         label_statement_surplus.setObjectName('label_statement_surplus')
-        grid.addWidget(label_statement_surplus, 14, 1)
+        grid.addWidget(label_statement_surplus, 6, 1)
         self.field_statement_surplus = QDoubleSpinBox()
         self.field_statement_surplus.setObjectName('field_statement_surplus')
         self.field_statement_surplus.setMinimum(0)
         self.field_statement_surplus.setMaximum(100000)
-        #self.field_statement_surplus.setDecimals(0)
+        self.field_statement_surplus.setDecimals(0)
         self.field_statement_surplus.setAlignment(alignRight)
         self.field_statement_surplus.valueChanged.connect(
             lambda value: self.update_end_amount(value, 'name')
         )
-        grid.addWidget(self.field_statement_surplus, 14, 2)
+        grid.addWidget(self.field_statement_surplus, 6, 2)
+
+        label_statement_surplus_potato = QLabel(self.tr('SOBRANTE PAPA FRITA:'))
+        label_statement_surplus_potato.setObjectName('label_statement_surplus_potato')
+        grid.addWidget(label_statement_surplus_potato, 6, 3)
+        self.field_statement_surplus_potato = QDoubleSpinBox()
+        self.field_statement_surplus_potato.setObjectName('field_statement_surplus_potato')
+        self.field_statement_surplus_potato.setMinimum(0)
+        self.field_statement_surplus_potato.setMaximum(100000)
+        self.field_statement_surplus_potato.setDecimals(0)
+        self.field_statement_surplus_potato.setAlignment(alignRight)
+        self.field_statement_surplus_potato.valueChanged.connect(
+            lambda value: self.update_end_amount(value, 'name')
+        )
+        grid.addWidget(self.field_statement_surplus_potato, 6, 4)
+
+        label_statement_surplus_gizzard = QLabel(self.tr('SOBRANTE MOLLEJA:'))
+        label_statement_surplus_gizzard.setObjectName('label_statement_surplus_gizzard')
+        grid.addWidget(label_statement_surplus_gizzard, 7, 1)
+        self.field_statement_surplus_gizzard = QDoubleSpinBox()
+        self.field_statement_surplus_gizzard.setObjectName('field_statement_surplus_gizzard')
+        self.field_statement_surplus_gizzard.setMinimum(0)
+        self.field_statement_surplus_gizzard.setMaximum(100000)
+        self.field_statement_surplus_gizzard.setDecimals(0)
+        self.field_statement_surplus_gizzard.setAlignment(alignRight)
+        self.field_statement_surplus_gizzard.valueChanged.connect(
+            lambda value: self.update_end_amount(value, 'name')
+        )
+        grid.addWidget(self.field_statement_surplus_gizzard, 7, 2)
 
         vbox_statement.addLayout(grid)
 
@@ -3368,8 +3457,8 @@ class MainWindow(FrontWindow):
             ('template.name', self.tr('NAME')),
             ('template.list_price', self.tr('PRICE')),
             ('quantity', self.tr('QUANTITY')),
-            ('template.brand', self.tr('MARCA')),
-            ('barcode', self.tr('BARRAS'),),
+            #('template.brand', self.tr('MARCA')),
+            #('barcode', self.tr('BARRAS'),),
         ]
 
         title = self.tr('SEARCH PRODUCTS...')
@@ -3445,8 +3534,10 @@ class MainWindow(FrontWindow):
         data = []
         #try:
         data = [ ( str(e['id']),
+            #str('Q. ' + str(e['template.']['list_price']) + ' - ' + e['template.']['name']),
             str(e['template.']['name']),
-            self._action_products[i] ) for i, e in enumerate(self.selected_products)
+            self._action_products[i],
+            str(e['template.']['list_price'])) for i, e in enumerate(self.selected_products)
         ]
         #except:
         #    pass
@@ -3558,7 +3649,9 @@ class MainWindow(FrontWindow):
         if not target:
             return
         target_words = target.split(' ')
-        domain = [('active','=',True)]
+        domain = [('active','=',True),
+            ('salable','=',True),
+            ('consumable','=',False),]
 
         for tw in target_words:
             if len(tw) <= 2:
@@ -3679,10 +3772,12 @@ class MainWindow(FrontWindow):
         data = {'name': self.tr('GLOBAL DISCOUNT')}
         self.dialog_global_discount = QuickDialog(self, 'action', data=[(field, data)])
 
-    def create_dialog_start_balance(self):
-        field = 'start_balance'
-        data = {'name': self.tr('SALDO INICIAL')}
-        self.dialog_start_balance = QuickDialog(self, 'action', data=[(field, data)])
+    def create_dialog_start_balance(self):        
+        view = [
+            ('start_balance', {'name': self.tr('SALDO INICIAL')}),
+            #('previous_leftout', {'name': self.tr('PIEZAS SOBRANTES')}),
+        ]
+        self.dialog_start_balance = QuickDialog(self, 'action', data=view)
 
     def create_dialog_force_assign(self):
         field = 'password_force_assign_ask'
@@ -3786,11 +3881,16 @@ class MainWindow(FrontWindow):
             self.dialog('more_than_one_statement_open')
             return
         if result['is_open'] == False:
+            #leftout = self._Statement.previous_leftout([], self._context)
+            #previous_leftout = leftout['previous_leftout']
+            #self.field_previous_leftout.setText(str(previous_leftout))
+            #self.field_previous_leftout.setEnabled(False)
+
             res = self.dialog_start_balance.exec_()
             if res:
                 amount = self.field_start_balance.text()
 
-                if amount and amount.isdigit():
+                if amount and float(amount):
                     res = self._Statement.new_statement([], amount, self._context)
                     if res['result'] == True:
                         self.field_start_balance.setText('')
@@ -3987,7 +4087,6 @@ class MainWindow(FrontWindow):
 
         for item in  self._complementary_categories:
             if item['id'] == self.next_category:
-                print("item", item['name'], item['id'])
                 current_category = item
                 break
         #current_category = self._product_categories[self.next_category]
@@ -4857,7 +4956,6 @@ class MainWindow(FrontWindow):
             self.address_id = party['address']            
         elif len(tax_identifier)>5:
             party = self._search_party(tax_identifier)
-            print("party", party)
             if party:
                 self.party_id = party['id']
                 self.address_id = party['address']
@@ -4890,14 +4988,19 @@ class MainWindow(FrontWindow):
         one = float(str(self.field_statement_one.value()))
         currency = float(str(self.field_statement_currency.value()))
         voucher = float(str(self.field_statement_voucher.value()))
+        #surplus = float(str(self.field_statement_surplus.value())) # MINUS
 
-        end_balance = str(self.field_statement_end_balance.value())
+        #leftout = float(str(self.field_statement_previous_leftout.value()))
+
+        start_balance = float(str(self.field_statement_start_balance.value()))
+        end_balance = float(str(self.field_statement_end_balance.value()))
 
         cash_amount = two_hundred * 200 + one_hundred * 100 + \
             fifty * 50 + twenty * 20 + ten * 10 + fifth * 5 + \
             one + currency + voucher
 
-        difference =  float(end_balance) - cash_amount
+        #difference =  float(end_balance) - cash_amount - surplus
+        difference = start_balance + end_balance - cash_amount
 
         self.field_statement_count.setValue(float(cash_amount))
         self.field_statement_difference.setValue(float(difference))
