@@ -3156,18 +3156,6 @@ class MainWindow(FrontWindow):
         self.field_statement_end_balance.setEnabled(False)
         #grid.addWidget(self.field_statement_end_balance, 3, 2)
 
-        label_statement_count = QLabel(self.tr('EFECTIVO - PIEZAS SOBRANTES:'))
-        label_statement_count.setObjectName('label_statement_count')
-        #grid.addWidget(label_statement_count, 3, 3)
-        self.field_statement_count = QDoubleSpinBox()
-        self.field_statement_count.setObjectName('field_statement_count')
-        self.field_statement_count.setMinimum(-100000)
-        self.field_statement_count.setMaximum(100000)
-        self.field_statement_count.setDecimals(2)
-        self.field_statement_count.setAlignment(alignRight)
-        self.field_statement_count.setEnabled(False)
-        #grid.addWidget(self.field_statement_count, 3, 4)
-
         label_statement_difference = QLabel(self.tr('DIFERENCIA:'))
         label_statement_difference.setObjectName('label_statement_difference')
         #grid.addWidget(label_statement_difference, 4, 1)
@@ -3347,6 +3335,19 @@ class MainWindow(FrontWindow):
             lambda value: self.update_end_amount(value, 'name')
         )
         grid.addWidget(self.field_statement_surplus_gizzard, 7, 2)
+
+        label_statement_count = QLabel(self.tr('EFECTIVO DISPONIBLE:'))
+        label_statement_count.setObjectName('label_statement_count')
+        grid.addWidget(label_statement_count, 7, 3)
+        self.field_statement_count = QDoubleSpinBox()
+        self.field_statement_count.setObjectName('field_statement_count')
+        self.field_statement_count.setMinimum(-100000)
+        self.field_statement_count.setMaximum(100000)
+        self.field_statement_count.setDecimals(2)
+        self.field_statement_count.setAlignment(alignRight)
+        self.field_statement_count.setEnabled(False)
+        grid.addWidget(self.field_statement_count, 7, 4)
+
 
         vbox_statement.addLayout(grid)
 
@@ -3939,7 +3940,7 @@ class MainWindow(FrontWindow):
         self.field_party.setText('CONSUMIDOR FINAL')
         self.field_address.setText('CIUDAD')
         self.field_nit.setText('CF')
-        self.action_select_delivery_method()
+        #self.action_select_delivery_method()
         self.label_input.setFocus()
 
     def _set_sale_date(self):
@@ -4569,7 +4570,7 @@ class MainWindow(FrontWindow):
         self.row_field_expense_amount = QDoubleSpinBox()
         self.row_field_expense_amount.setObjectName('row_field_expense_amount')
         self.row_field_expense_amount.setMinimum(0)
-        self.row_field_expense_amount.setMaximum(1000)
+        self.row_field_expense_amount.setMaximum(100000)
         self.row_field_expense_amount.setDecimals(2)
         self.row_field_expense_amount.setAlignment(alignRight)
         grid.addWidget(self.row_field_expense_amount, 2, 2)
