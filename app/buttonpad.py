@@ -1,9 +1,11 @@
 import os
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QStackedWidget
 
 from neox.commons.custom_button import CustomButton, CustomProductButton
 from .common import get_svg_icon, get_png_icon, get_local_png_icon
+
+from PyQt5.QtGui import QTouchEvent, QMouseEvent, QRegExpValidator
 
 DIR_SHARE = os.path.abspath(os.path.normpath(os.path.join(__file__,
     '..', '..', 'share')))
@@ -67,6 +69,8 @@ class ButtonsFunction(QGridLayout):
             self.addWidget(button, *position)
 
 class Buttonpad(QWidget):
+
+    clicked = pyqtSignal(QMouseEvent)
 
     def __init__(self, parent):
         super(Buttonpad, self).__init__()

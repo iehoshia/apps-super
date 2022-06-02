@@ -65,3 +65,17 @@ class Image(QLabel):
             size.width(),
             size.height()
         )
+
+    def mousePressEvent(self, event):
+        #print ("clicked 70")
+        return
+        '''
+        if not self.parent._product_mode:
+            #self.parent.buttonpad.functions.setVisible(False)
+            self.parent.panel_right.setVisible(False)
+            self.parent._product_mode = True
+        else:
+            #self.parent.buttonpad.setVisible(True)
+            self.parent.panel_right.setVisible(True)
+            self.parent._product_mode = False
+        '''

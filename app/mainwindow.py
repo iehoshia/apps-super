@@ -70,6 +70,7 @@ class MainWindow(FrontWindow):
             icon=get_svg_icon('pos-icon'))
         self.set_style(SCREENS[self.screen_size])
 
+        self._product_mode = False
         self.is_clear_right_panel = True
         self.payment_ctx = {}
         self.set_keys()
@@ -84,6 +85,7 @@ class MainWindow(FrontWindow):
         self.setupSaleLineModel()
         self.setupPaymentModel()
         self.set_domains()
+
         self.create_gui()
         self.installEventFilter(self)
         self.message_bar.load_stack(self.stack_msg)
@@ -186,35 +188,6 @@ class MainWindow(FrontWindow):
                 and sale['state'] == 'draft':
             self.delete_current_sale()
 
-    def close_statement_deprecated(self):
-        return
-        result = self._Statement.check_open_statement([], self._context)
-        if result.get('error'):
-            self.dialog('more_than_one_statement_open')
-            return
-        if result['is_open'] == True:
-            processing_sale = self._Statement.check_statement_before_close([],
-                self._shop['id'],
-                self._context)
-            if processing_sale['to_close'] == False:
-                return self.dialog('sales_processing').exec_()
-            self.action_print_statement()
-            self.field_amount_to_close.setText(str(result['amount_to_close']))
-            res = self.dialog_close_statement.exec_()
-            if res == DIALOG_REPLY_NO:
-                return
-            self._Statement.close_statement([],
-                self._shop['id'],
-                self._context)
-            #self.createNewSale()
-            self.dialog('statement_closed')
-            self.message_bar.set('statement_closed')
-            self.set_state('cancel')
-            self._model_payment_lines.setDomain([('statement.state','=','draft')], \
-                order=[('id','DESC')])
-
-        return
-
     def close_statement(self):
 
         two_hundred = float(str(self.field_statement_two_hundred.value()))
@@ -229,7 +202,7 @@ class MainWindow(FrontWindow):
         surplus_potato = float(str(self.field_statement_surplus_potato.value()))
         surplus_gizzard = float(str(self.field_statement_surplus_gizzard.value()))
 
-        start_balance = float(self.field_statement_end_balance.value())
+        start_balance = float(self.field_statement_start_balance.value())
         end_balance = float(self.field_statement_end_balance.value())
 
         cash_amount = two_hundred * 200 + one_hundred * 100 + \
@@ -510,7 +483,7 @@ class MainWindow(FrontWindow):
             'model': 'purchase.purchase',
             'fields': ('company', 'number', 'reference', 'description',
             'state', 'purchase_date', 'party', 'party.name','warehouse',
-            'warehouse.name', 'lines',
+            'warehouse.name', 'lines', 'custom_state',
             'invoices', 'moves',),
             'methods': (
                 'approve_purchase', 'cancel',
@@ -1153,6 +1126,7 @@ class MainWindow(FrontWindow):
 
         self.buttonpad = Buttonpad(self)
         self.pixmap_pos = Image(self, 'pixmap_pos', FILE_BANNER)
+
         self.table_payment = TableView('table_payment',
             self._model_payment_lines, [200, STRETCH])
 
@@ -2790,7 +2764,6 @@ class MainWindow(FrontWindow):
         except:
             pass
 
-        #difference =  float(end_balance) - cash_amount - surplus
         difference = start_balance + end_balance + leftout
 
         self.field_statement_date.setDate(statement['date'])
@@ -3482,7 +3455,7 @@ class MainWindow(FrontWindow):
             ('number', self.tr('NUMBER')),
             ('description', self.tr('DESCRIPTION')),
             ('party.name', self.tr('SUPPLIER')),
-            ('state', self.tr('STATE')),
+            ('custom_state', self.tr('ESTADO')),
             ('purchase_date', self.tr('DATE')),
             ('warehouse.name', self.tr('WAREHOUSE')),
         ]
@@ -4989,19 +4962,14 @@ class MainWindow(FrontWindow):
         one = float(str(self.field_statement_one.value()))
         currency = float(str(self.field_statement_currency.value()))
         voucher = float(str(self.field_statement_voucher.value()))
-        #surplus = float(str(self.field_statement_surplus.value())) # MINUS
-
-        #leftout = float(str(self.field_statement_previous_leftout.value()))
-
-        start_balance = float(str(self.field_statement_start_balance.value()))
+    
         end_balance = float(str(self.field_statement_end_balance.value()))
 
         cash_amount = two_hundred * 200 + one_hundred * 100 + \
             fifty * 50 + twenty * 20 + ten * 10 + fifth * 5 + \
             one + currency + voucher
 
-        #difference =  float(end_balance) - cash_amount - surplus
-        difference = start_balance + end_balance - cash_amount
+        difference = end_balance - cash_amount
 
         self.field_statement_count.setValue(float(cash_amount))
         self.field_statement_difference.setValue(float(difference))
@@ -5333,6 +5301,10 @@ class MainWindow(FrontWindow):
     def action_table(self):
         self.left_table_lines.setFocus()
 
+    def action_top_sales(self):
+        
+        self.dialog_search_products_by_image.exec_()
+
     def action_expense(self):
         self.row_field_expense_amount.setValue(0)
         self.row_field_description.setText('')
@@ -5610,7 +5582,7 @@ class MainWindow(FrontWindow):
             self.action_search_sale()
         elif key == Qt.Key_F10:
             #self.close_statement()
-            self.action_load_statement()
+            self.action_top_sales()
         elif key == Qt.Key_F11:
             self.action_new_sale()
         elif key == Qt.Key_F12:

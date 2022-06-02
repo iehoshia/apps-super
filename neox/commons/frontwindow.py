@@ -20,7 +20,7 @@ __all__ = ['FrontWindow', 'ClearUi']
 parent = Path(__file__).parent.parent
 parent = str(parent)
 file_base_css = os.path.join(parent, 'css', 'base.css')
-_DEFAULT_TIMEOUT = 2700  # on segs
+_DEFAULT_TIMEOUT = 300  # on segs
 path_trans = os.path.join(os.path.abspath(
     os.path.dirname(__file__)), 'locale', 'i18n_es.qm')
 

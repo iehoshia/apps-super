@@ -238,8 +238,8 @@ class Transport(xmlrpc.client.SafeTransport):
         '''
         http_connection()
 
-        if self.__fingerprints is not None:
-            self.__fingerprints[host] = fingerprint
+        #if self.__fingerprints is not None:
+        #    self.__fingerprints[host] = fingerprint
         self._connection[1].timeout = DEFAULT_TIMEOUT
         self._connection[1].sock.settimeout(DEFAULT_TIMEOUT)
         return self._connection[1]
