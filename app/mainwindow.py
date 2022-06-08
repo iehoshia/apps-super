@@ -2756,6 +2756,7 @@ class MainWindow(FrontWindow):
 
         start_balance = statement['start_balance']
         end_balance = statement['calculated_end_balance']
+
         
         leftout = Decimal('0')
         try:
@@ -4270,21 +4271,6 @@ class MainWindow(FrontWindow):
         elif res['res'] == 'error':
             self.message_bar.set('something_wrong')
 
-    def on_accept_statement(self):
-        if not self.statement:
-            return
-
-        if res['res'] == 'ok':
-
-            self._Statement.close_statement([],
-                self._shop['id'],
-                self._context)
-
-            self.dialog('statement_closed')
-            self.message_bar.set('statement_closed')
-            self.print_statement_report(self.statement['id'])
-            self.set_state('cancel')
-
     def on_selected_new_product(self, product=None, code=None):
         if self._state == 'cash':
             return
@@ -4964,6 +4950,7 @@ class MainWindow(FrontWindow):
         voucher = float(str(self.field_statement_voucher.value()))
     
         end_balance = float(str(self.field_statement_end_balance.value()))
+
 
         cash_amount = two_hundred * 200 + one_hundred * 100 + \
             fifty * 50 + twenty * 20 + ten * 10 + fifth * 5 + \
