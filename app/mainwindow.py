@@ -608,6 +608,8 @@ class MainWindow(FrontWindow):
 
         self._default_warehouse = self._shop['warehouses'][0]
 
+        print("611", self._default_warehouse)
+
         self._default_self_pick_up = self._config['self_pick_up']
 
         self._journals = self._Journal.find([
