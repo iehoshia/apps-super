@@ -221,6 +221,7 @@ class MainWindow(FrontWindow):
             return
         if result['is_open'] == True:
             result = self._Statement.check_statement_before_close([],
+                cash=surplus,
                 self._shop['id'],
                 self._context)
             if result['to_close'] == False:
