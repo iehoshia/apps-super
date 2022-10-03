@@ -609,8 +609,6 @@ class MainWindow(FrontWindow):
 
         self._default_warehouse = self._shop['warehouses'][0]
 
-        print("611", self._default_warehouse)
-
         self._default_self_pick_up = self._config['self_pick_up']
 
         self._journals = self._Journal.find([
@@ -848,9 +846,10 @@ class MainWindow(FrontWindow):
                 #]
 
         #FIXME
+        now = date.today() + timedelta(days=1)
         if self._config['show_stock_pos'] in ('value', 'icon'):
             self.stock_context = {
-                'stock_date_end': date.today(),
+                'stock_date_end': now,
                 'locations': [self._default_warehouse],
             }
         return True
