@@ -720,6 +720,7 @@ class MainWindow(FrontWindow):
                 if i > 15:
                     break
                 #try:
+                print("template", template)
                 product, = self._Product.find([('template','=', template)], limit=1)
                 products.append(product)
 
