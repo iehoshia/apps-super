@@ -719,13 +719,9 @@ class MainWindow(FrontWindow):
 
                 if i > 15:
                     break
-                #try:
-                print("template", template)
+
                 product, = self._Product.find([('template','=', template)], limit=1)
                 products.append(product)
-
-                #except:
-                #    pass
             products = sorted(products, key=lambda d:d['template.']['name'])
             category['products'] = products
 
@@ -1176,7 +1172,6 @@ class MainWindow(FrontWindow):
                     error = not(self._process_price(self._amount_text))
         elif self._state in ['add', 'cancel', 'accept']:
             self.clear_right_panel()
-            #self.on_selected_new_product(code=self._input_text)
             self.add_product(code=self._input_text)
         elif self._state == 'cash':
             is_paid = self._process_pay(self.field_amount.text())
@@ -1304,21 +1299,31 @@ class MainWindow(FrontWindow):
 
         self.field_journal_id = self._default_journal_id
 
-        if res['result'] != 'ok':
+        print("1304", res)
+        if res['result'] != 'ok' or res['result'] != 'ok_without_payment':
+
             self.message_bar.set('statement_closed')
             self.dialog('statement_closed')
             return False
 
-        if change < ZERO:
-            self.message_bar.set('enter_payment')
+        if res['result'] == 'ok':
 
-        self._sale.update(res)
-        residual_amount = self._sale['residual_amount']
+            if change < ZERO:
+                self.message_bar.set('enter_payment')
 
-        if self._sale['residual_amount'] <= 0:
-            # The sale is paid
-            self._done_sale()
-            return True
+            self._sale.update(res)
+            residual_amount = self._sale['residual_amount']
+
+            if self._sale['residual_amount'] <= 0:
+                # The sale is paid
+                self._done_sale()
+
+        elif res['result'] == 'ok_without_payment':
+            print("1323")
+            self.done_sale()
+
+        print("1325")
+        return True
 
     def validate_done_sale(self):
         if self._model_sale_lines.rowCount() == 0:
@@ -2792,13 +2797,17 @@ class MainWindow(FrontWindow):
 
         self.field_statement_difference.setValue(difference)
         self._model_statement_lines.setDomain([])
+
         if len(statement_lines) > 0:
 
             self._model_statement_lines.setDomain(domain=None)
 
-            for line in statement_lines:
-                line_id = line['id']
-                self._model_statement_lines.appendId(line_id)
+            #FIX ME FOR CRUCERO
+
+            if self._user.get('company') != 4:
+                for line in statement_lines:
+                    line_id = line['id']
+                    self._model_statement_lines.appendId(line_id)
 
             self.dialog_statement.ok_button.setEnabled(False)
             self.dialog_statement.exec_()
@@ -4481,28 +4490,28 @@ class MainWindow(FrontWindow):
 
         label_line_description = QLabel('DESCRIPCIÓN:')
         label_line_description.setObjectName('label_line_description')
-        grid.addWidget(label_line_description, 3, 1)
+        #grid.addWidget(label_line_description, 3, 1)
         self.row_field_line_description = QLineEdit()
         self.row_field_line_description.setObjectName('row_field_line_description')
         self.row_field_line_description.setAlignment(alignLeft)
-        grid.addWidget(self.row_field_line_description, 3, 2)
+        #grid.addWidget(self.row_field_line_description, 3, 2)
         self.row_field_line_description.textChanged.connect(
             lambda value: self.update_sale_line(value, 'description')
         )
 
         label_discount = QLabel(self.tr('DISCOUNT:'))
         label_discount.setObjectName('label_discount')
-        grid.addWidget(label_discount, 4, 1)
+        grid.addWidget(label_discount, 3, 1)
         self.row_field_discount_from_search = QDoubleSpinBox()
         self.row_field_discount_from_search.setObjectName('row_field_discount_from_search')
-        self.row_field_discount_from_search.setMinimum(0)
-        self.row_field_discount_from_search.setMaximum(1000)
+        self.row_field_discount_from_search.setMinimum(-10000)
+        self.row_field_discount_from_search.setMaximum(10000)
         self.row_field_discount_from_search.setEnabled(True)
         if self._config.get('decimals_digits_quantity'):
             qty = self._config['decimals_digits_quantity']
         self.row_field_discount_from_search.setDecimals(qty)
         self.row_field_discount_from_search.setAlignment(alignRight)
-        grid.addWidget(self.row_field_discount_from_search, 4, 2)
+        grid.addWidget(self.row_field_discount_from_search, 3, 2)
         self.row_field_discount_from_search.valueChanged.connect(
             lambda value: self.update_sale_line_from_search(value, 'discount_amount')
         )
@@ -5108,15 +5117,17 @@ class MainWindow(FrontWindow):
             if cash_amount > 0:
                 res = self.add_payment(cash_amount)
 
-                if res['result'] != 'ok':
+                if res['result'] == 'ok_without_payment':
+                    self._done_sale()
+                    return True
+
+                elif res['result'] == 'ok':
+                    self._done_sale()
+                    return True
+                elif res['result'] != 'ok':
                     self.message_bar.set('statement_closed')
                     self.dialog('statement_closed')
                     return False
-
-                self._sale.update(res)
-
-            #self._PosSale.workflow_to_end([], self._sale['id'], self._context)
-            self._done_sale()
 
     def setupSaleLineModel(self):
 
@@ -5379,7 +5390,11 @@ class MainWindow(FrontWindow):
             self.dialog('statement_closed')
             self.message_bar.set('statement_closed')
             return res
-        self.addPaymentLine(res['line_id'])
+
+        print("res 5389", res)
+
+        if res['result'] == 'ok':
+            self.addPaymentLine(res['line_id'])
         return res
 
     def dialog_expense_accepted(self):
