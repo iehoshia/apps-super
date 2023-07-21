@@ -4970,6 +4970,8 @@ class MainWindow(FrontWindow):
 
         difference = end_balance - cash_amount
 
+        #print("difference", difference, cash_amount, end_balance)
+
         self.field_statement_count.setValue(float(cash_amount))
         self.field_statement_difference.setValue(float(difference))
         
