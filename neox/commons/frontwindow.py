@@ -20,7 +20,7 @@ __all__ = ['FrontWindow', 'ClearUi']
 parent = Path(__file__).parent.parent
 parent = str(parent)
 file_base_css = os.path.join(parent, 'css', 'base.css')
-_DEFAULT_TIMEOUT = 300  # on segs
+_DEFAULT_TIMEOUT = 30  # on segs
 path_trans = os.path.join(os.path.abspath(
     os.path.dirname(__file__)), 'locale', 'i18n_es.qm')
 
@@ -79,18 +79,6 @@ class FrontWindow(QMainWindow):
         self.setFocus()
         self._global_timer = 0
         self.set_timeout()
-        self.count_time()
-
-        #self.debug = debug
-        #self.gc_timer = QTimer(self)
-        #self.gc_timer.timeout.connect(self.check)
-
-        #self.threshold = gc.get_threshold()
-        #gc.disable()
-        #self.gc_timer.start(10000)
-
-        #self.dispatcher = ThreadDispatcher(self)
-        #self.dispatcher.start()
 
     def set_stack_messages(self):
         self.stack_msg = {}
@@ -125,8 +113,6 @@ class FrontWindow(QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.count_time)
         self.timer.start(1000)
-        #self.threshold = gc.get_threshold()
-        #gc.disable()
 
     def check(self):
         #return self.debug_cycles() # uncomment to just debug cycles
@@ -156,7 +142,7 @@ class FrontWindow(QMainWindow):
         self._global_timer += 1
         if self._global_timer > self.timeout:
             self._global_timer = 0
-            dblogin.safe_reconnect(self)
+            self.action_print_pending_sales()
 
     def dialog(self, name, response=False):
         res = QuickDialog(

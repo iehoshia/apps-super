@@ -33,26 +33,17 @@ class ButtonsFunction(QGridLayout):
 
         self.values.extend([
 
-            #['button_search_product', self.tr('PRODUCTO'), 'action_search_product'], #SERVICIOS
-            ['button_search_category', self.tr('MENU'), 'action_search_category'], #CATEGORIES
-            #['button_search_combo', self.tr('COMBO'), 'action_search_combo'], #CATEGORIES
+            ['button_search_product', self.tr('PRODUCTO'), 'action_search_product'], #SERVICIOS
             ['button_new_sale', self.tr('NEW SALE'), 'action_new_sale'],
-        ])
-
-        self.values.extend([
             ['button_search_sale', self.tr('S. SALE'), 'action_search_sale'],
             ['button_cancel', self.tr('CANCEL'), 'action_cancel'],
-            #['button_credit_sale', self.tr('CREDIT SALE'), 'action_credit_sale'],
-            ['button_production', self.tr('PRODUCCIÓN'), 'action_production'],
-            
-            ['button_invoice_reprint', self.tr('REPRINT'), 'action_re_print_invoice'],
-            #['button_product_by_location', self.tr('P. BY LOCATION'), \
-            #    'action_print_product_by_location'],
             ['button_expense', self.tr('GASTOS'), 'action_expense'],
-            ['button_purchase', self.tr('COMPRAS'), \
-                'action_search_purchase'],
+            ['button_label', self.tr('ETIQUETAS'), \
+                'action_print_label'],
             ['button_statement', self.tr('CIERRE'), \
                 'action_load_statement'],
+            ['button_add_product', self.tr('NUEVO PROD.'), 'action_new_product'],
+            ['button_update_quantity', self.tr('INGRESAR PROD.'), 'action_update_quantity'],
         ])
 
         positions = [(i, j) for i in range(rows) for j in range(columns)]

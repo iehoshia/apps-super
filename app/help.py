@@ -16,7 +16,7 @@ class Help(HelpDialog):
             (self.tr('IMPRIMIR FACTURA'), 'F7'),
             (self.tr('METODO DE ENTREGA'), 'F8'),
             (self.tr('BUSCAR VENTA'), 'F9'),
-            (self.tr('CERRAR CAJA'), 'F10'),
+            (self.tr('UNIR COMANDAS'), 'F10'),
             (self.tr('NUEVA VENTA'), 'F11'),
             (self.tr('CANCELAR VENTA'), 'F12'),
             (self.tr('AGREGAR PRODUCTO'), 'ENTER'),
