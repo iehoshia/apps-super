@@ -199,7 +199,6 @@ class MainWindow(FrontWindow):
         fifth = float(str(self.field_statement_fifth.value()))
         one = float(str(self.field_statement_one.value()))
         currency = float(str(self.field_statement_currency.value()))
-        surplus = float(str(self.field_statement_surplus.value()))
         voucher = float(str(self.field_statement_voucher.value()))
 
         start_balance = float(self.field_statement_start_balance.value())
@@ -226,7 +225,6 @@ class MainWindow(FrontWindow):
             self._Statement.close_statement([],
                 self._shop['id'],
                 cash_amount,
-                surplus,
                 self._context)
             self.dialog('statement_closed')
             self.message_bar.set('statement_closed')
@@ -389,18 +387,17 @@ class MainWindow(FrontWindow):
             'name':'_Statement',
             'model':'account.statement',
             'fields': ('id','name','state','date','journal','end_balance',
-                'start_balance','surplus','leftout',
+                'start_balance','surplus',
                 'calculated_end_balance'),
             'methods': ('new_statement','close_statement',
                 'check_open_statement',
-                'check_statement_before_close',
-                'previous_leftout'),
+                'check_statement_before_close',),
         }
         _StatementLine = {
             'name':'_StatementLine',
             'model':'account.statement.line',
             'fields': ('statement',
-                'related_to.invoice_with_serie',
+                'invoice.invoice_with_serie',
                 'number','amount','party.name','description'),
         }
         _Party = {
@@ -455,7 +452,7 @@ class MainWindow(FrontWindow):
             'name': '_Template',
             'model': 'product.template',
             'fields': ('id','name', 'list_price', 'account_category',
-                'producible','active', 'pos_producible',
+                'producible','active',
                 'photo',
             ),
             'methods':(
@@ -527,8 +524,7 @@ class MainWindow(FrontWindow):
                 'has_credit_sale', 'invoice_with_serie',
                 'total_amount', 'origin', 'has_production_included',
                 'short_description','agent', 'agent.party.name',
-                'fiscal_invoice_state', 'description','delivery_method', 'board',
-                'guest', 'printed' ),
+                'fiscal_invoice_state', 'description', ),
             'methods': (
                 'cancel_sale','credit_sale', 'get_amounts',
                 'get_discount_total', 'process_sale',
@@ -536,7 +532,7 @@ class MainWindow(FrontWindow):
                 'add_payment', 'update_description',
                 'get_order2print', 'add_expense',
                 'new_sale', 'workflow_to_end', 'clear_empty_sales',
-                'update_delivery_method', 'create_production',
+                'create_production',
                 'join_sales', 'check_pending_sales',
             )
         }
@@ -640,9 +636,6 @@ class MainWindow(FrontWindow):
             ('template.expense', '=', True),
         ])
 
-        self._production_products = self._Product.find([
-            ('template.pos_producible','=',True)
-        ])
         self._payment_terms = self._PaymentTerm.find([()],
             limit=1)
 
@@ -652,7 +645,6 @@ class MainWindow(FrontWindow):
         #    return 'user_without_permission'
         self.user_can_delete = True # self.type_pos_user in ('salesman','frontend_admin', 'cashier')
 
-        #self._default_party_id = 7# self._shop['guest_party'] TODO CHANGE
         self._default_party, = self._Party.find([('tax_identifier','=','CIN'),
             ('name','=','CIN')],
             limit=1)
@@ -694,139 +686,12 @@ class MainWindow(FrontWindow):
         ])
 
         self._action_report_statement, = self._ActionReport.find([
-            ('report_name', '=', 'account.statement.letter'),
+            ('report_name', '=', 'account.statement'),
         ],limit=1)
 
         self._action_report_product_by_location, = self._ActionReport.find([
             ('report_name', '=', 'product.by_location.report'),
         ],limit=1)
-
-        self._product_categories = self._ProductCategory.find(
-            [('accounting','=',False),
-            ('menu','=',True)], limit=16, order=[('name','ASC')])
-
-        self._product_combos = self._ProductCategory.find(
-            [('accounting','=',False),
-            ('combo','=',True)], limit=16, order=[('name','ASC')])
-
-        self._complementary_categories = self._ProductCategory.find(
-            [('accounting','=',False),
-            ('complementary','=',True)], limit=16, order=[('name','ASC')])
-
-        for i, category in enumerate(self._product_categories):
-            #create_icon_file(category.get('name'), category.get('image'))
-            templates = category.get('templates')
-            products = []
-            for i, template in enumerate(templates):
-
-                if i > 15:
-                    break
-
-                product, = self._Product.find([('template','=', template)], limit=1)
-                products.append(product)
-            products = sorted(products, key=lambda d:d['template.']['name'])
-            category['products'] = products
-
-        for i, category in enumerate(self._product_combos):
-            #create_icon_file(category.get('name'), category.get('image'))
-            templates = category.get('templates')
-            products = []
-            for i, template in enumerate(templates):
-
-                if i > 15:
-                    break
-                #try:
-                product, = self._Product.find([('template','=', template)], limit=1)
-                products.append(product)
-
-                #except:
-                #    pass
-            products = sorted(products, key=lambda d:d['template.']['name'])
-            category['products'] = products
-
-        for i, category in enumerate(self._complementary_categories):
-            #create_icon_file(category.get('name'), category.get('image'))
-            templates = category.get('templates')
-            products = []
-            for i, template in enumerate(templates):
-
-                if i > 15:
-                    break
-                #try:
-                product, = self._Product.find([('template','=', template)], limit=1)
-                products.append(product)
-
-                #except:
-                #    pass
-            products = sorted(products, key=lambda d:d['template.']['name'])
-            category['products'] = products
-
-        self._action_categories = [
-            'action_first_category',
-            'action_second_category',
-            'action_third_category',
-            'action_fourth_category',
-            'action_fifth_category',
-            'action_sixth_category',
-            'action_seventh_category',
-            'action_eighth_category',
-            'action_nineth_category',
-            'action_tenth_category',
-            'action_evelenth_category',
-            'action_twelveth_category',
-            'action_thirteenth_category',
-            'action_fourteenth_category',
-            'action_fifteenth_category',
-            'action_sixteenth_category',
-        ]
-
-        self._action_combos = [
-            'action_first_combo',
-            'action_second_combo',
-            'action_third_combo',
-            'action_fourth_combo',
-            'action_fifth_combo',
-            'action_sixth_combo',
-            'action_seventh_combo',
-            'action_eighth_combo',
-            'action_nineth_combo',
-            'action_tenth_combo',
-            'action_evelenth_combo',
-            'action_twelveth_combo',
-            'action_thirteenth_combo',
-            'action_fourteenth_combo',
-            'action_fifteenth_combo',
-            'action_sixteenth_combo',
-        ]
-
-        self._action_products = [
-            'action_first_product',
-            'action_second_product',
-            'action_third_product',
-            'action_fourth_product',
-            'action_fifth_product',
-            'action_sixth_product',
-            'action_seventh_product',
-            'action_eighth_product',
-            'action_ninth_product',
-            'action_tenth_product',
-            'action_eleventh_product',
-            'action_twelfth_product',
-            'action_thirteenth_product',
-            'action_fourteenth_product',
-            'action_fifteenth_product',
-            'action_sixteenth_product',
-        ]
-
-        self._category_buttons = [ ( str(e['id']),
-                str(e['name']),
-                self._action_categories[i] ) for i, e in enumerate(self._product_categories)
-            ]
-
-        self._combo_buttons = [ ( str(e['id']),
-                str(e['name']),
-                self._action_combos[i] ) for i, e in enumerate(self._product_combos)
-            ]
 
         self._actions_agent = [
             'action_first_agent',
@@ -875,20 +740,16 @@ class MainWindow(FrontWindow):
         self.create_dialog_statement()
         self.create_dialog_new_product()
         self.create_dialog_update_quantity()
+        self.create_dialog_update_template_list_price()
         #self.create_dialog_salesman()
         self.create_dialog_sale_line()
         self.create_dialog_sale_line_from_search()
         self.create_dialog_search_party()
         self.create_dialog_search_products()
-        self.create_dialog_search_categories_by_image()
-        self.create_dialog_search_combos_by_image()
         self.create_dialog_search_products_to_update_existence()
         self.create_dialog_search_purchases()
-        self.create_dialog_search_agent_by_image()
-        self.create_dialog_select_delivery_method()
         self.create_dialog_search_sales()
         self.create_dialog_expense()
-        self.create_dialog_production()
         self.create_dialog_stock()
         self.create_dialog_voucher()
         self.create_dialog_confirm_payment()
@@ -1027,13 +888,6 @@ class MainWindow(FrontWindow):
         _fields_amounts = [
             ('date', {
                 'name': self.tr('DATE'),
-                'readonly': True,
-                'placeholder': False,
-                'size': self.screen_size,
-                'color': 'gray'
-            }),
-            ('delivery_method', {
-                'name': self.tr('ENTREGA'),
                 'readonly': True,
                 'placeholder': False,
                 'size': self.screen_size,
@@ -1422,13 +1276,50 @@ class MainWindow(FrontWindow):
         except:
             pass
 
-    def update_production_line(self, value, field):
-        quantity = int(self.row_field_production_quantity.value())
+    def update_product_list_price(self):
+        try:
+            code = str(self.field_product_list_price_code.text())
+            name = str(self.field_product_list_price_name.text())
+            cost = float(str(self.field_product_list_price_unit_price.value()))
+        except:
+            code = 0
+            name = ''
+            cost = 0
 
-        if quantity > 0:
-            self.dialog_production.ok_button.setEnabled(True)
+        products = self._Product.find([('code','=',code)])
+
+        if len(products)>0:
+            product = products[0]
+
+            self.field_product_list_price_name.setText(product.get('template.').get('name'))
+            self.field_product_list_price_unit_price.setValue(
+                product.get('template.').get('list_price'))
         else:
-            self.dialog_production.ok_button.setEnabled(False)
+            self.field_product_list_price_name.setText('')
+            self.field_product_list_price_unit_price.setValue(0)
+
+        try:
+            if len(name)> 1 and len(code) > 0 and cost>0:
+                self.dialog_product_list_price.ok_button.setEnabled(True)
+            else:
+                self.dialog_product_list_price.ok_button.setEnabled(False)
+        except:
+            pass
+
+    def update_product_list_price_values(self, value, field):
+        try:
+            code = str(self.field_product_list_price_code.text())
+            name = str(self.field_product_list_price_name.text())
+            list_price = float(str(self.field_product_list_price_unit_price.value()))
+        except:
+            code = 0
+            name = ''
+            list_price = 0
+
+        if len(name)> 0 and len(code) > 0 and list_price>0:
+            self.dialog_product_list_price.ok_button.setEnabled(True)
+        else:
+            self.dialog_product_list_price.ok_button.setEnabled(False)
 
     def update_product_existence(self):
         code = str(self.field_product_qty_code.text())
@@ -1565,24 +1456,6 @@ class MainWindow(FrontWindow):
             return
         self.dialog_payment.exec_()
 
-    def action_delivery_method(self):
-        self._PosSale.update_delivery_method([], self._sale['id'], 'delivery', self._context)
-        self.field_delivery_method.setText('DOMICILIO')
-        self.dialog_select_delivery_method.hide()
-        return
-
-    def action_local_table(self):
-        self._PosSale.update_delivery_method([], self._sale['id'], 'table', self._context)
-        self.field_delivery_method.setText('MESAS')
-        self.dialog_select_delivery_method.hide()
-        return
-
-    def action_take_away(self):
-        self._PosSale.update_delivery_method([], self._sale['id'], 'take_away', self._context)
-        self.field_delivery_method.setText('PARA LLEVAR')
-        self.dialog_select_delivery_method.hide()
-        return
-
     def action_payment_term_selection_changed(self):
         is_credit = self._payment_terms[str(self.field_payment_term_id)]['is_credit']
         self._PosSale.write([self._sale['id']], {'payment_term': self.field_payment_term_id})
@@ -1647,9 +1520,6 @@ class MainWindow(FrontWindow):
             data, direct_print=False, context=ctx)
         return
 
-    def action_print_pending_sales(self):
-        result = self._PosSale.check_pending_sales([], self._context)
-
     def action_create_party(self):
         self.field_tax_identifier.setText("")
         self.field_name.setText("")
@@ -1664,9 +1534,6 @@ class MainWindow(FrontWindow):
         self.field_first_sale.setText("")
         self.field_first_sale.setFocus()
         self.dialog_join_sales.exec_()
-
-    def action_select_delivery_method(self):
-        self.dialog_select_delivery_method.exec_()
 
     def on_search_product_to_update(self):
         target = self.dialog_search_products_to_update_existence.filter_field.text()
@@ -2859,21 +2726,13 @@ class MainWindow(FrontWindow):
         start_balance = statement['start_balance']
         end_balance = statement['calculated_end_balance']
 
-        
-        leftout = Decimal('0')
-        try:
-            if statement['leftout']:
-                leftout = statement['leftout']
-        except:
-            pass
-
-        difference = start_balance + end_balance + leftout
+    
+        difference = start_balance + end_balance
 
         self.field_statement_date.setDate(statement['date'])
 
         self.field_statement_start_balance.setValue(start_balance)
         self.field_statement_end_balance.setValue(end_balance)
-        self.field_statement_previous_leftout.setValue(leftout)
 
         self.field_statement_two_hundred.setValue(0)
         self.field_statement_one_hundred.setValue(0)
@@ -2884,24 +2743,16 @@ class MainWindow(FrontWindow):
         self.field_statement_one.setValue(0)
         self.field_statement_currency.setValue(0)
         self.field_statement_voucher.setValue(0)
-        self.field_statement_surplus.setValue(0)
-        self.field_statement_surplus_potato.setValue(0)
-        self.field_statement_surplus_gizzard.setValue(0)
         self.field_statement_count.setValue(0)
-
         self.field_statement_difference.setValue(difference)
         self._model_statement_lines.setDomain([])
 
         if len(statement_lines) > 0:
 
             self._model_statement_lines.setDomain(domain=None)
-
-            #FIX ME FOR CRUCERO
-
-            #if self._user.get('company') != 4:
-            #    for line in statement_lines:
-            #        line_id = line['id']
-            #        self._model_statement_lines.appendId(line_id)
+            for line in statement_lines:
+                line_id = line['id']
+                self._model_statement_lines.appendId(line_id)
 
             self.dialog_statement.ok_button.setEnabled(False)
             self.dialog_statement.exec_()
@@ -2949,7 +2800,6 @@ class MainWindow(FrontWindow):
         #self._model_payment_lines.setDomain([('statement.state','=','draft')], \
         #    order=[('id','DESC')])
         self.field_order_number.setText(flat_sale['number'] or '')
-        self.field_delivery_method.setText(flat_sale['delivery_method'] or '')
         self._set_sale_date()
         if hasattr(self, 'field_position'):
             self.field_position.setText(flat_sale['position'] or '')
@@ -3108,10 +2958,6 @@ class MainWindow(FrontWindow):
             self.on_selected_new_product(
                 code=self.dialog_search_products.current_row['code'])
 
-
-    def on_selected_delivery_method(self):
-        return
-
     def on_selected_product_quantity(self):
         if self.dialog_search_products.current_row:
             self.clear_right_panel()
@@ -3242,30 +3088,6 @@ class MainWindow(FrontWindow):
         self.field_statement_start_balance.setAlignment(alignRight)
         self.field_statement_start_balance.setEnabled(False)
         #grid.addWidget(self.field_statement_start_balance, 2, 2)
-
-        label_statement_previous_leftout = QLabel(self.tr('SALDO PIEZAS ANTERIOR:'))
-        label_statement_previous_leftout.setObjectName('label_statement_previous_leftout')
-        #grid.addWidget(label_statement_previous_leftout, 2, 3)
-        self.field_statement_previous_leftout = QDoubleSpinBox()
-        self.field_statement_previous_leftout.setObjectName('field_statement_previous_leftout')
-        self.field_statement_previous_leftout.setMinimum(0)
-        self.field_statement_previous_leftout.setMaximum(100000)
-        self.field_statement_previous_leftout.setDecimals(2)
-        self.field_statement_previous_leftout.setAlignment(alignRight)
-        self.field_statement_previous_leftout.setEnabled(False)
-        #grid.addWidget(self.field_statement_previous_leftout, 2, 4)
-
-        label_statement_end_balance = QLabel(self.tr('VENTAS - GASTOS:'))
-        label_statement_end_balance.setObjectName('label_statement_end_balance')
-        #grid.addWidget(label_statement_end_balance, 3, 1)
-        self.field_statement_end_balance = QDoubleSpinBox()
-        self.field_statement_end_balance.setObjectName('field_statement_end_balance')
-        self.field_statement_end_balance.setMinimum(0)
-        self.field_statement_end_balance.setMaximum(100000)
-        self.field_statement_end_balance.setDecimals(2)
-        self.field_statement_end_balance.setAlignment(alignRight)
-        self.field_statement_end_balance.setEnabled(False)
-        #grid.addWidget(self.field_statement_end_balance, 3, 2)
 
         label_statement_difference = QLabel(self.tr('DIFERENCIA:'))
         label_statement_difference.setObjectName('label_statement_difference')
@@ -3405,47 +3227,17 @@ class MainWindow(FrontWindow):
         )
         grid.addWidget(self.field_statement_voucher, 5, 4)
 
-        label_statement_surplus = QLabel(self.tr('SOBRANTE TORTILLA:'))
-        label_statement_surplus.setObjectName('label_statement_surplus')
-        #grid.addWidget(label_statement_surplus, 6, 1)
-        self.field_statement_surplus = QDoubleSpinBox()
-        self.field_statement_surplus.setObjectName('field_statement_surplus')
-        self.field_statement_surplus.setMinimum(0)
-        self.field_statement_surplus.setMaximum(100000)
-        self.field_statement_surplus.setDecimals(0)
-        self.field_statement_surplus.setAlignment(alignRight)
-        self.field_statement_surplus.valueChanged.connect(
-            lambda value: self.update_end_amount(value, 'name')
-        )
-        #grid.addWidget(self.field_statement_surplus, 6, 2)
-
-        label_statement_surplus_potato = QLabel(self.tr('SOBRANTE PAPA FRITA:'))
-        label_statement_surplus_potato.setObjectName('label_statement_surplus_potato')
-        #grid.addWidget(label_statement_surplus_potato, 6, 3)
-        self.field_statement_surplus_potato = QDoubleSpinBox()
-        self.field_statement_surplus_potato.setObjectName('field_statement_surplus_potato')
-        self.field_statement_surplus_potato.setMinimum(0)
-        self.field_statement_surplus_potato.setMaximum(100000)
-        self.field_statement_surplus_potato.setDecimals(0)
-        self.field_statement_surplus_potato.setAlignment(alignRight)
-        self.field_statement_surplus_potato.valueChanged.connect(
-            lambda value: self.update_end_amount(value, 'name')
-        )
-        #grid.addWidget(self.field_statement_surplus_potato, 6, 4)
-
-        label_statement_surplus_gizzard = QLabel(self.tr('SOBRANTE MOLLEJA:'))
-        label_statement_surplus_gizzard.setObjectName('label_statement_surplus_gizzard')
-        #grid.addWidget(label_statement_surplus_gizzard, 7, 1)
-        self.field_statement_surplus_gizzard = QDoubleSpinBox()
-        self.field_statement_surplus_gizzard.setObjectName('field_statement_surplus_gizzard')
-        self.field_statement_surplus_gizzard.setMinimum(0)
-        self.field_statement_surplus_gizzard.setMaximum(100000)
-        self.field_statement_surplus_gizzard.setDecimals(0)
-        self.field_statement_surplus_gizzard.setAlignment(alignRight)
-        self.field_statement_surplus_gizzard.valueChanged.connect(
-            lambda value: self.update_end_amount(value, 'name')
-        )
-        #grid.addWidget(self.field_statement_surplus_gizzard, 7, 2)
+        label_statement_end_balance = QLabel(self.tr('VENTAS - GASTOS:'))
+        label_statement_end_balance.setObjectName('label_statement_end_balance')
+        grid.addWidget(label_statement_end_balance, 7, 1)
+        self.field_statement_end_balance = QDoubleSpinBox()
+        self.field_statement_end_balance.setObjectName('field_statement_end_balance')
+        self.field_statement_end_balance.setMinimum(0)
+        self.field_statement_end_balance.setMaximum(100000)
+        self.field_statement_end_balance.setDecimals(2)
+        self.field_statement_end_balance.setAlignment(alignRight)
+        self.field_statement_end_balance.setEnabled(False)
+        grid.addWidget(self.field_statement_end_balance, 7, 2)
 
         label_statement_count = QLabel(self.tr('EFECTIVO DISPONIBLE:'))
         label_statement_count.setObjectName('label_statement_count')
@@ -3624,15 +3416,73 @@ class MainWindow(FrontWindow):
         cost = float(str(self.field_product_cost.value()))
         existence = float(str(self.field_price_existence.value()))
 
-        #FIX ME
-        #try:
         res = self._Template.create_product([], name, code, price, cost, existence,
             self._context)
         if res:
             self.dialog('product_successfully_created').exec_()
-        #except:
-        #    self.dialog('product_not_created').exec_()
+
+    def update_product_list_price_finish(self):
+        code = str(self.field_product_list_price_code.text())
+        list_price = float(str(self.field_product_list_price_unit_price.value()))
+
+        try:
+            res = self._Template.update_template_list_price([], code, list_price, self._context)
+            if res:
+                self.dialog('product_successfully_created').exec_()
+            else:
+                self.dialog('product_not_created').exec_()
+        except:
+            self.dialog('product_not_created').exec_()
         return
+
+    def create_dialog_update_template_list_price(self):
+        title = self.tr('ACTUALIZAR PRECIO')
+        
+        vbox_qty_product = QVBoxLayout()
+        grid = QGridLayout()
+
+        label_product_qty_code = QLabel(self.tr('CÓDIGO:'))
+        label_product_qty_code.setObjectName('label_product_qty_code')
+        grid.addWidget(label_product_qty_code, 1, 1)
+        self.field_product_list_price_code = QLineEdit()
+        self.field_product_list_price_code.setObjectName('field_product_list_price_code')
+        self.field_product_list_price_code.setAlignment(alignRight)
+        self.field_product_list_price_code.editingFinished.connect(self.update_product_list_price)
+        grid.addWidget(self.field_product_list_price_code, 1, 2)
+
+        label_product_qty_name = QLabel(self.tr('NOMBRE:'))
+        label_product_qty_name.setObjectName('label_product_qty_name')
+        grid.addWidget(label_product_qty_name, 2, 1)
+        self.field_product_list_price_name = QLineEdit()
+        self.field_product_list_price_name.setObjectName('field_product_list_price_name')
+        self.field_product_list_price_name.setAlignment(alignRight)
+        self.field_product_list_price_name.setEnabled(False)
+        grid.addWidget(self.field_product_list_price_name, 2, 2)
+
+        label_product_qty_cost = QLabel(self.tr('PRECIO:'))
+        label_product_qty_cost.setObjectName('label_product_qty_cost')
+        grid.addWidget(label_product_qty_cost, 3, 1)
+        self.field_product_list_price_unit_price = QDoubleSpinBox()
+        self.field_product_list_price_unit_price.setObjectName('field_product_list_price_unit_price')
+        self.field_product_list_price_unit_price.setMinimum(0)
+        self.field_product_list_price_unit_price.setMaximum(100000)
+        self.field_product_list_price_unit_price.setDecimals(2)
+        self.field_product_list_price_unit_price.setAlignment(alignRight)
+        self.field_product_list_price_unit_price.valueChanged.connect(
+            lambda value: self.update_product_list_price_values(value, 'name')
+        )
+        grid.addWidget(self.field_product_list_price_unit_price, 3, 2)
+
+        
+        vbox_qty_product.addLayout(grid)
+
+        methods = {
+            'on_accepted_method': 'update_product_list_price_finish',
+        }
+        self.dialog_product_list_price = TableDialog(self, methods=methods,
+            widgets=vbox_qty_product, title=title)
+
+        self.dialog_product_list_price.ok_button.setEnabled(False)
 
     # install our own except hook.
     def except_hook(self, exc=None, tb=None):
@@ -3694,8 +3544,6 @@ class MainWindow(FrontWindow):
             ('number', self.tr('NUMBER')),
             ('party.name', self.tr('PARTY')),
             ('party.tax_identifier.code', self.tr('TAX ID')),
-            ('guest', self.tr('NOMBRE')),
-            ('board', self.tr('MESA')),
             ('description', self.tr('DESCRIPCIÓN')),
             ('sale_date', self.tr('DATE')),
             ('invoice_with_serie', self.tr('INVOICE')),
@@ -3790,88 +3638,6 @@ class MainWindow(FrontWindow):
             methods, cols_width=[40, 60, 200, 200, 90, 80, 100],
             title=title, fill=True, filter_column=[1, 2, 3, 4])
         self.dialog_search_purchases.activate_counter()
-
-    def create_dialog_search_categories_by_image(self):
-        methods = {
-            'on_selected_category_by_image': self.on_selected_category_by_image,
-        }
-
-        self.categorypad = Categorypad(self, self._category_buttons)
-
-        widget = self.categorypad
-
-        self.dialog_search_categories_by_image = CategoryDialog(self,
-            methods, widget=widget,
-            title=self.tr('MENU'),
-            )
-
-    def create_dialog_search_combos_by_image(self):
-        methods = {
-            'on_selected_combo_by_image': self.on_selected_combo_by_image,
-        }
-
-        self.combopad = Categorypad(self, self._combo_buttons)
-
-        widget = self.combopad
-
-        self.dialog_search_combos_by_image = CategoryDialog(self,
-            methods,
-            widget=widget,
-            title=self.tr('COMBOS'),
-            )
-
-    def create_dialog_search_products_by_image(self):
-        methods = {
-            'on_selected_product_by_image': self.on_selected_product_by_image,
-        }
-        for product in self.selected_products:
-            name = product.get('template.').get('name')
-            #create_icon_file(name, product.get('photo'))
-
-        data = []
-        #try:
-        data = [ ( str(e['id']),
-            #str('Q. ' + str(e['template.']['list_price']) + ' - ' + e['template.']['name']),
-            str(e['template.']['name']),
-            self._action_products[i],
-            str(e['template.']['list_price'])) for i, e in enumerate(self.selected_products)
-        ]
-        #except:
-        #    pass
-
-        self.productpad = Productpad(self, data)
-        widget = self.productpad
-
-        self.dialog_search_products_by_image = ProductDialog(self,
-            methods, widget=widget,
-            title=self.tr('SELECCIONE PRODUCTO'),
-            )
-
-    def create_dialog_search_agent_by_image(self):
-        methods = {
-            'on_selected_product_by_image': self.on_selected_product_by_image,
-        }
-        self.agentpad = Agentpad(self, self._agents_buttons)
-        widget = self.agentpad
-
-        self.dialog_search_agent_by_image = AgentDialog(self,
-            methods, widget=widget,
-            title=self.tr('AGENT BY IMAGE'),
-            )
-
-    def create_dialog_select_delivery_method(self):
-        methods = {
-            'on_selected_delivery_method': self.on_selected_delivery_method,
-        }
-
-        self.deliverypad = Deliverypad(self)
-
-        widget = self.deliverypad
-
-        self.dialog_select_delivery_method = DeliveryDialog(self,
-            methods, widget=widget,
-            title=self.tr('ENTREGA'),
-            )
 
     def create_dialog_search_party(self):
         headers = [
@@ -4067,7 +3833,6 @@ class MainWindow(FrontWindow):
     def create_dialog_start_balance(self):        
         view = [
             ('start_balance', {'name': self.tr('SALDO INICIAL')}),
-            #('previous_leftout', {'name': self.tr('PIEZAS SOBRANTES')}),
         ]
         self.dialog_start_balance = QuickDialog(self, 'action', data=view)
 
@@ -4136,7 +3901,6 @@ class MainWindow(FrontWindow):
         self.field_global_discount_ask.setText('')
         self.field_amount.zero()
         self.field_order_number.setText('')
-        self.field_delivery_method.setText('')
         self.current_comment = ''
         self._model_sale_lines.setDomain([])
         self.clear_input_text()
@@ -4224,11 +3988,9 @@ class MainWindow(FrontWindow):
             self._model_sale_lines.setDomain([('sale', '=', self._sale['id'])])
             self._set_sale_date()
             self.field_order_number.setText(self._sale['number'])
-            self.field_delivery_method.setText('MESAS')
         self.field_party.setText('CONSUMIDOR INTERNO')
         self.field_address.setText('CIUDAD')
         self.field_nit.setText('CIN')
-        #self.action_select_delivery_method()
         self.label_input.setFocus()
 
     def _set_sale_date(self):
@@ -4317,15 +4079,12 @@ class MainWindow(FrontWindow):
             self._state = 'warning'
             return
 
-        #FIXME PRICE_LIST
-
         res = self._PosSale.add_product(
             self._sale['id'],
             product_id,
             quantity,
             discount,
             agent,
-            description,
             self._context,
         )
 
@@ -4901,40 +4660,6 @@ class MainWindow(FrontWindow):
         self.dialog_expense = QuickDialog(self, 'action', widgets=[vbox_product])
         self.dialog_expense.accepted.connect(self.dialog_expense_accepted)
         self.dialog_expense.ok_button.setEnabled(False)
-
-    def create_dialog_production(self):
-        
-        vbox_product = QVBoxLayout()
-        grid = QGridLayout()
-
-        label_product_production = QLabel(self.tr('PRODUCTO:'))
-        label_product_production.setObjectName('label_product_production')
-        grid.addWidget(label_product_production, 1, 1)
-        self.field_product_production = ComboBox(self, 'product_production',
-                {'values': [(str(e['id']), str(e['template.']['name']))
-                    for e in self._production_products]})
-        grid.addWidget(self.field_product_production, 1, 2)
-
-        label_production_quantity = QLabel(self.tr('CANTIDAD:'))
-        label_production_quantity.setObjectName('label_production_quantity')
-        grid.addWidget(label_production_quantity, 2, 1)
-        self.row_field_production_quantity = QDoubleSpinBox()
-        self.row_field_production_quantity.setObjectName('row_field_expense_amount')
-        self.row_field_production_quantity.setMinimum(0)
-        self.row_field_production_quantity.setMaximum(1000)
-        self.row_field_production_quantity.setDecimals(0)
-        self.row_field_production_quantity.setAlignment(alignRight)
-        grid.addWidget(self.row_field_production_quantity, 2, 2)
-        self.row_field_production_quantity.valueChanged.connect(
-            lambda value: self.update_production_line(value, 'quantity')
-        )
-
-        self.field_product_production.setFocus()
-        vbox_product.addLayout(grid)
-
-        self.dialog_production = QuickDialog(self, 'action', widgets=[vbox_product])
-        self.dialog_production.accepted.connect(self.dialog_production_accepted)
-        self.dialog_production.ok_button.setEnabled(False)
 
     def month_number_spanish(self, number):
         switcher = {
@@ -5601,8 +5326,8 @@ class MainWindow(FrontWindow):
             'width': 100
         }
 
-        related_to = {
-            'name': 'related_to.number',
+        invoice = {
+            'name': 'invoice.number',
             'align': alignLeft,
             'description': self.tr('FACTURA'),
             'width': 90,
@@ -5647,7 +5372,7 @@ class MainWindow(FrontWindow):
         self.fields_purchase_line = [product_code, product_name,
             qty, uom]
 
-        self.fields_statement_line = [related_to, number, statement_line_amount, #party, 
+        self.fields_statement_line = [invoice, number, statement_line_amount, #party, 
             description,
         ]
 
@@ -5697,20 +5422,21 @@ class MainWindow(FrontWindow):
         self.field_product_qty_code.setFocus()
         self.dialog_product_qty.exec_()
 
+    def action_update_price_list(self):
+        self.field_product_list_price_code.setText('')
+        self.field_product_list_price_name.setText('')
+        self.field_product_list_price_unit_price.setValue(0)
+        self.dialog_product_list_price.exec_()
+
     def action_expense(self):
         self.row_field_expense_amount.setValue(0)
         self.row_field_description.setText('')
         self.dialog_expense.exec_()
 
-    def action_production(self):
-        self.row_field_production_quantity.setValue(0)
-        self.dialog_production.exec_()
-
     def action_delete_line(self, key):
         sale = self.get_current_sale()
         if self._model_sale_lines.rowCount() <= 0 or \
-                self._state == 'cash' or sale['state'] != 'draft' or \
-                sale['printed'] == True:
+                self._state == 'cash' or sale['state'] != 'draft':
             return
         if key is False:
             key = Qt.Key_Delete
@@ -5801,19 +5527,6 @@ class MainWindow(FrontWindow):
             self.message_bar.set('statement_closed')
         else:
             self.dialog('expense_successfully')
-        return
-
-    def dialog_production_accepted(self):
-        
-        product = self.field_product_production.get_id()
-        quantity = float(str(self.row_field_production_quantity.value()))
-
-        res = self._PosSale.create_production([], product, quantity, self._context)
-
-        if res['result'] == 'done':
-            self.dialog('production_successfully')
-        else:
-            self.dialog('production_error')            
         return
 
     def addPaymentLine(self, line_id):
@@ -5975,7 +5688,7 @@ class MainWindow(FrontWindow):
         elif key == Qt.Key_F7:
             self.action_re_print_invoice()
         elif key == Qt.Key_F8:
-            self.action_select_delivery_method()
+            pass
         elif key == Qt.Key_F9:
             self.action_print_statement()
         elif key == Qt.Key_F10:

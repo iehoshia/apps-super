@@ -142,7 +142,6 @@ class FrontWindow(QMainWindow):
         self._global_timer += 1
         if self._global_timer > self.timeout:
             self._global_timer = 0
-            self.action_print_pending_sales()
 
     def dialog(self, name, response=False):
         res = QuickDialog(

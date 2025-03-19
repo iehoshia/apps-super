@@ -38,8 +38,9 @@ class ButtonsFunction(QGridLayout):
             ['button_search_sale', self.tr('S. SALE'), 'action_search_sale'],
             ['button_cancel', self.tr('CANCEL'), 'action_cancel'],
             ['button_expense', self.tr('GASTOS'), 'action_expense'],
-            ['button_label', self.tr('ETIQUETAS'), \
-                'action_print_label'],
+            #['button_label', self.tr('ETIQUETAS'), \
+            #    'action_print_label'],
+            ['button_update_list_price', self.tr('ACTUA. PRECIO'), 'action_update_price_list'],
             ['button_statement', self.tr('CIERRE'), \
                 'action_load_statement'],
             ['button_add_product', self.tr('NUEVO PROD.'), 'action_new_product'],
